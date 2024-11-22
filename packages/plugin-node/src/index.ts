@@ -3,7 +3,7 @@ export * from "./services/index.ts";
 import { Plugin } from "@ai16z/eliza";
 
 import {
-    BrowserService,
+    // BrowserService,
     ImageDescriptionService,
     LlamaService,
     PdfService,
@@ -16,7 +16,7 @@ export const nodePlugin: Plugin = {
     name: "default",
     description: "Default plugin, with basic actions and evaluators",
     services: [
-        new BrowserService(),
+        // new BrowserService(),
         new ImageDescriptionService(),
         new LlamaService(),
         new PdfService(),
