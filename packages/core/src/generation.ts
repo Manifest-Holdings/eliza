@@ -67,8 +67,8 @@ export async function generateText({
     const provider = runtime.modelProvider;
     const endpoint =
         runtime.character.modelEndpointOverride || models[provider].endpoint;
-    let model = models[provider].model[modelClass];
-
+    let model = runtime.character.settings.model || models[provider].model[modelClass];
+    elizaLogger.log("Using model:", model);
     // if runtime.getSetting("LLAMACLOUD_MODEL_LARGE") is true and modelProvider is LLAMACLOUD, then use the large model
     if (
         runtime.getSetting("LLAMACLOUD_MODEL_LARGE") &&
@@ -84,7 +84,7 @@ export async function generateText({
         model = runtime.getSetting("LLAMACLOUD_MODEL_SMALL");
     }
 
-    const temperature = models[provider].settings.temperature;
+    const temperature = Number(runtime.character.settings.model) || models[provider].settings.temperature;
     const frequency_penalty = models[provider].settings.frequency_penalty;
     const presence_penalty = models[provider].settings.presence_penalty;
     const max_context_length = models[provider].settings.maxInputTokens;
