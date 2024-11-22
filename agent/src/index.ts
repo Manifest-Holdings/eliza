@@ -338,14 +338,17 @@ const startAgents = async () => {
         });
     }
 
-    // Added this to keep the process alive
-    process.on('SIGINT', () => {
-        console.log('Gracefully shutting down...');
-        process.exit(0);
-    });
+    if (process.env.ENVIRONMENT && process.env.ENVIRONMENT === "development") {
+        elizaLogger.log("Chat started. Type 'exit' to quit.");
+        chat();
+    } else {
+        // Added this to keep the process alive
+        process.on('SIGINT', () => {
+            console.log('Gracefully shutting down...');
+            process.exit(0);
+        });
+    }
 
-    elizaLogger.log("Chat started. Type 'exit' to quit.");
-    chat();
 };
 
 startAgents().catch((error) => {
