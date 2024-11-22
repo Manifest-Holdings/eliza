@@ -338,6 +338,12 @@ const startAgents = async () => {
         });
     }
 
+    // Added this to keep the process alive
+    process.on('SIGINT', () => {
+        console.log('Gracefully shutting down...');
+        process.exit(0);
+    });
+
     elizaLogger.log("Chat started. Type 'exit' to quit.");
     chat();
 };
