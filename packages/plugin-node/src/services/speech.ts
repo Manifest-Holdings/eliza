@@ -3,7 +3,7 @@ import { IAgentRuntime, ISpeechService, ServiceType } from "@ai16z/eliza";
 import { getWavHeader } from "./audioUtils.ts";
 import { Service } from "@ai16z/eliza";
 import { validateNodeConfig } from "../enviroment.ts";
-import * as Echogarden from "echogarden";
+// import * as Echogarden from "echogarden";
 
 function prependWavHeader(
     readable: Readable,
@@ -125,49 +125,49 @@ async function textToSpeech(runtime: IAgentRuntime, text: string) {
     } catch (error) {
         if (error.message === "QUOTA_EXCEEDED") {
             // Fall back to VITS
-            const { audio } = await Echogarden.synthesize(text, {
-                engine: "vits",
-                voice: "en_US-hfc_female-medium",
-            });
+            // const { audio } = await Echogarden.synthesize(text, {
+            //     engine: "vits",
+            //     voice: "en_US-hfc_female-medium",
+            // });
 
-            let wavStream: Readable;
-            if (audio instanceof Buffer) {
-                console.log("audio is a buffer");
-                wavStream = Readable.from(audio);
-            } else if ("audioChannels" in audio && "sampleRate" in audio) {
-                console.log("audio is a RawAudio");
-                const floatBuffer = Buffer.from(audio.audioChannels[0].buffer);
-                console.log("buffer length: ", floatBuffer.length);
+            // let wavStream: Readable;
+            // if (audio instanceof Buffer) {
+            //     console.log("audio is a buffer");
+            //     wavStream = Readable.from(audio);
+            // } else if ("audioChannels" in audio && "sampleRate" in audio) {
+            //     console.log("audio is a RawAudio");
+            //     const floatBuffer = Buffer.from(audio.audioChannels[0].buffer);
+            //     console.log("buffer length: ", floatBuffer.length);
 
-                // Get the sample rate from the RawAudio object
-                const sampleRate = audio.sampleRate;
+            //     // Get the sample rate from the RawAudio object
+            //     const sampleRate = audio.sampleRate;
 
-                // Create a Float32Array view of the floatBuffer
-                const floatArray = new Float32Array(floatBuffer.buffer);
+            //     // Create a Float32Array view of the floatBuffer
+            //     const floatArray = new Float32Array(floatBuffer.buffer);
 
-                // Convert 32-bit float audio to 16-bit PCM
-                const pcmBuffer = new Int16Array(floatArray.length);
-                for (let i = 0; i < floatArray.length; i++) {
-                    pcmBuffer[i] = Math.round(floatArray[i] * 32767);
-                }
+            //     // Convert 32-bit float audio to 16-bit PCM
+            //     const pcmBuffer = new Int16Array(floatArray.length);
+            //     for (let i = 0; i < floatArray.length; i++) {
+            //         pcmBuffer[i] = Math.round(floatArray[i] * 32767);
+            //     }
 
-                // Prepend WAV header to the buffer
-                const wavHeaderBuffer = getWavHeader(
-                    pcmBuffer.length * 2,
-                    sampleRate,
-                    1,
-                    16
-                );
-                const wavBuffer = Buffer.concat([
-                    wavHeaderBuffer,
-                    Buffer.from(pcmBuffer.buffer),
-                ]);
+            //     // Prepend WAV header to the buffer
+            //     const wavHeaderBuffer = getWavHeader(
+            //         pcmBuffer.length * 2,
+            //         sampleRate,
+            //         1,
+            //         16
+            //     );
+            //     const wavBuffer = Buffer.concat([
+            //         wavHeaderBuffer,
+            //         Buffer.from(pcmBuffer.buffer),
+            //     ]);
 
-                wavStream = Readable.from(wavBuffer);
-            } else {
-                throw new Error("Unsupported audio format");
-            }
-            return wavStream;
+            //     wavStream = Readable.from(wavBuffer);
+            // } else {
+            //     throw new Error("Unsupported audio format");
+            // }
+            // return wavStream;
         }
         throw error; // Re-throw other errors
     }
@@ -189,98 +189,98 @@ export class SpeechService extends Service implements ISpeechService {
                 return await textToSpeech(runtime, text);
             }
 
-            // Default to VITS if no ElevenLabs API key
-            const { audio } = await Echogarden.synthesize(text, {
-                engine: "vits",
-                voice: "en_US-hfc_female-medium",
-            });
+            // // Default to VITS if no ElevenLabs API key
+            // const { audio } = await Echogarden.synthesize(text, {
+            //     engine: "vits",
+            //     voice: "en_US-hfc_female-medium",
+            // });
 
-            let wavStream: Readable;
-            if (audio instanceof Buffer) {
-                console.log("audio is a buffer");
-                wavStream = Readable.from(audio);
-            } else if ("audioChannels" in audio && "sampleRate" in audio) {
-                console.log("audio is a RawAudio");
-                const floatBuffer = Buffer.from(audio.audioChannels[0].buffer);
-                console.log("buffer length: ", floatBuffer.length);
+            // let wavStream: Readable;
+            // if (audio instanceof Buffer) {
+            //     console.log("audio is a buffer");
+            //     wavStream = Readable.from(audio);
+            // } else if ("audioChannels" in audio && "sampleRate" in audio) {
+            //     console.log("audio is a RawAudio");
+            //     const floatBuffer = Buffer.from(audio.audioChannels[0].buffer);
+            //     console.log("buffer length: ", floatBuffer.length);
 
-                // Get the sample rate from the RawAudio object
-                const sampleRate = audio.sampleRate;
+            //     // Get the sample rate from the RawAudio object
+            //     const sampleRate = audio.sampleRate;
 
-                // Create a Float32Array view of the floatBuffer
-                const floatArray = new Float32Array(floatBuffer.buffer);
+            //     // Create a Float32Array view of the floatBuffer
+            //     const floatArray = new Float32Array(floatBuffer.buffer);
 
-                // Convert 32-bit float audio to 16-bit PCM
-                const pcmBuffer = new Int16Array(floatArray.length);
-                for (let i = 0; i < floatArray.length; i++) {
-                    pcmBuffer[i] = Math.round(floatArray[i] * 32767);
-                }
+            //     // Convert 32-bit float audio to 16-bit PCM
+            //     const pcmBuffer = new Int16Array(floatArray.length);
+            //     for (let i = 0; i < floatArray.length; i++) {
+            //         pcmBuffer[i] = Math.round(floatArray[i] * 32767);
+            //     }
 
-                // Prepend WAV header to the buffer
-                const wavHeaderBuffer = getWavHeader(
-                    pcmBuffer.length * 2,
-                    sampleRate,
-                    1,
-                    16
-                );
-                const wavBuffer = Buffer.concat([
-                    wavHeaderBuffer,
-                    Buffer.from(pcmBuffer.buffer),
-                ]);
+            //     // Prepend WAV header to the buffer
+            //     const wavHeaderBuffer = getWavHeader(
+            //         pcmBuffer.length * 2,
+            //         sampleRate,
+            //         1,
+            //         16
+            //     );
+            //     const wavBuffer = Buffer.concat([
+            //         wavHeaderBuffer,
+            //         Buffer.from(pcmBuffer.buffer),
+            //     ]);
 
-                wavStream = Readable.from(wavBuffer);
-            } else {
-                throw new Error("Unsupported audio format");
-            }
+            //     wavStream = Readable.from(wavBuffer);
+            // } else {
+            //     throw new Error("Unsupported audio format");
+            // }
 
-            return wavStream;
+            // return wavStream;
         } catch (error) {
             console.error("Speech generation error:", error);
             // If ElevenLabs fails for any reason, fall back to VITS
-            const { audio } = await Echogarden.synthesize(text, {
-                engine: "vits",
-                voice: "en_US-hfc_female-medium",
-            });
+            // const { audio } = await Echogarden.synthesize(text, {
+            //     engine: "vits",
+            //     voice: "en_US-hfc_female-medium",
+            // });
 
-            let wavStream: Readable;
-            if (audio instanceof Buffer) {
-                console.log("audio is a buffer");
-                wavStream = Readable.from(audio);
-            } else if ("audioChannels" in audio && "sampleRate" in audio) {
-                console.log("audio is a RawAudio");
-                const floatBuffer = Buffer.from(audio.audioChannels[0].buffer);
-                console.log("buffer length: ", floatBuffer.length);
+            // let wavStream: Readable;
+            // if (audio instanceof Buffer) {
+            //     console.log("audio is a buffer");
+            //     wavStream = Readable.from(audio);
+            // } else if ("audioChannels" in audio && "sampleRate" in audio) {
+            //     console.log("audio is a RawAudio");
+            //     const floatBuffer = Buffer.from(audio.audioChannels[0].buffer);
+            //     console.log("buffer length: ", floatBuffer.length);
 
-                // Get the sample rate from the RawAudio object
-                const sampleRate = audio.sampleRate;
+            //     // Get the sample rate from the RawAudio object
+            //     const sampleRate = audio.sampleRate;
 
-                // Create a Float32Array view of the floatBuffer
-                const floatArray = new Float32Array(floatBuffer.buffer);
+            //     // Create a Float32Array view of the floatBuffer
+            //     const floatArray = new Float32Array(floatBuffer.buffer);
 
-                // Convert 32-bit float audio to 16-bit PCM
-                const pcmBuffer = new Int16Array(floatArray.length);
-                for (let i = 0; i < floatArray.length; i++) {
-                    pcmBuffer[i] = Math.round(floatArray[i] * 32767);
-                }
+            //     // Convert 32-bit float audio to 16-bit PCM
+            //     const pcmBuffer = new Int16Array(floatArray.length);
+            //     for (let i = 0; i < floatArray.length; i++) {
+            //         pcmBuffer[i] = Math.round(floatArray[i] * 32767);
+            //     }
 
-                // Prepend WAV header to the buffer
-                const wavHeaderBuffer = getWavHeader(
-                    pcmBuffer.length * 2,
-                    sampleRate,
-                    1,
-                    16
-                );
-                const wavBuffer = Buffer.concat([
-                    wavHeaderBuffer,
-                    Buffer.from(pcmBuffer.buffer),
-                ]);
+            //     // Prepend WAV header to the buffer
+            //     const wavHeaderBuffer = getWavHeader(
+            //         pcmBuffer.length * 2,
+            //         sampleRate,
+            //         1,
+            //         16
+            //     );
+            //     const wavBuffer = Buffer.concat([
+            //         wavHeaderBuffer,
+            //         Buffer.from(pcmBuffer.buffer),
+            //     ]);
 
-                wavStream = Readable.from(wavBuffer);
-            } else {
-                throw new Error("Unsupported audio format");
-            }
+            //     wavStream = Readable.from(wavBuffer);
+            // } else {
+            //     throw new Error("Unsupported audio format");
+            // }
 
-            return wavStream;
+            // return wavStream;
         }
     }
 }
