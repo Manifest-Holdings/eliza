@@ -663,6 +663,8 @@ export type Character = {
             url?: string;
         };
         model?: string;
+        temperature?: number;
+        template?: number;
         embeddingModel?: string;
     };
 

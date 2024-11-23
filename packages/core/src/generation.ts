@@ -84,7 +84,7 @@ export async function generateText({
         model = runtime.getSetting("LLAMACLOUD_MODEL_SMALL");
     }
 
-    const temperature = Number(runtime.character.settings.model) || models[provider].settings.temperature;
+    const temperature = runtime.character.settings.temperature || models[provider].settings.temperature;
     const frequency_penalty = models[provider].settings.frequency_penalty;
     const presence_penalty = models[provider].settings.presence_penalty;
     const max_context_length = models[provider].settings.maxInputTokens;

@@ -190,11 +190,10 @@ export class TwitterInteractionClient {
         thread: Tweet[];
     }) {
         if (tweet.userId === this.client.profile.id) {
-            // console.log("skipping tweet from bot itself", tweet.id);
+            elizaLogger.log("Skipping tweet from bot itself");
             // Skip processing if the tweet is from the bot itself
             return;
         }
-
         if (!message.content.text) {
             elizaLogger.log("Skipping Tweet with no text", tweet.id);
             return { text: "", action: "IGNORE" };
