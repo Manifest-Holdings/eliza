@@ -331,6 +331,12 @@ export class TwitterInteractionClient {
         response.text = removeQuotes(response.text);
 
         if (response.text) {
+            if (this.runtime.getSetting("TWITTER_DRY_RUN") === "true") {
+                elizaLogger.info(
+                    `Dry run: would have posted tweet: ${response.text}`
+                );
+                return;
+            }
             try {
                 const callback: HandlerCallback = async (response: Content) => {
                     const memories = await sendTweet(
