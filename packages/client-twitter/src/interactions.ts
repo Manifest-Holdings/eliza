@@ -212,10 +212,8 @@ export class TwitterInteractionClient {
 
         const cachedTimeline = await this.client.getCachedTimeline();
         if (cachedTimeline) {
-            elizaLogger.debug("Cached timeline found");
             homeTimeline = cachedTimeline;
         } else {
-            elizaLogger.debug("No cached timeline found, fetching");
             homeTimeline = await this.client.fetchHomeTimeline(50);
             await this.client.cacheTimeline(homeTimeline);
         }
