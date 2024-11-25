@@ -104,13 +104,13 @@ export async function generateText({
         elizaLogger.debug(
             `Using provider: ${provider}, model: ${model}, temperature: ${temperature}, max response length: ${max_response_length}`
         );
+        elizaLogger.debug(`Context: ${context}`);
 
         switch (provider) {
             case ModelProviderName.OPENAI:
             case ModelProviderName.LLAMACLOUD: {
                 elizaLogger.debug("Initializing OpenAI model.");
                 const openai = createOpenAI({ apiKey, baseURL: endpoint });
-
                 const { text: openaiResponse } = await aiGenerateText({
                     model: openai.languageModel(model),
                     prompt: context,
@@ -124,8 +124,9 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
 
-                response = openaiResponse;
+                response = openaiResponse;                
                 elizaLogger.debug("Received response from OpenAI model.");
+                elizaLogger.debug(response);
                 break;
             }
 
