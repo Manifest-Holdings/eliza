@@ -219,55 +219,60 @@ export class ClientBase extends EventEmitter {
 
     async fetchHomeTimeline(count: number): Promise<Tweet[]> {
         elizaLogger.debug("fetching home timeline");
-        const homeTimeline = await this.twitterClient.getUserTweets(
-            this.profile.id,
-            count
-        );
-
+        // const homeTimeline = await this.twitterClient.getUserTweets(
+        //     this.profile.id,
+        //     count
+        // );
         // console.dir(homeTimeline, { depth: Infinity });
+        // return homeTimeline.tweets;
+        const homeTimeline = await this.twitterClient.fetchHomeTimeline(count, []);
+        // elizaLogger.debug("homeTimeline", homeTimeline);
 
-        return homeTimeline.tweets;
-        // .filter((t) => t.__typename !== "TweetWithVisibilityResults")
-        // .map((tweet) => {
-        //     // console.log("tweet is", tweet);
-        //     const obj = {
-        //         id: tweet.id,
-        //         name:
-        //             tweet.name ??
-        //             tweet. ?.user_results?.result?.legacy.name,
-        //         username:
-        //             tweet.username ??
-        //             tweet.core?.user_results?.result?.legacy.screen_name,
-        //         text: tweet.text ?? tweet.legacy?.full_text,
-        //         inReplyToStatusId:
-        //             tweet.inReplyToStatusId ??
-        //             tweet.legacy?.in_reply_to_status_id_str,
-        //         createdAt: tweet.createdAt ?? tweet.legacy?.created_at,
-        //         userId: tweet.userId ?? tweet.legacy?.user_id_str,
-        //         conversationId:
-        //             tweet.conversationId ??
-        //             tweet.legacy?.conversation_id_str,
-        //         hashtags: tweet.hashtags ?? tweet.legacy?.entities.hashtags,
-        //         mentions:
-        //             tweet.mentions ?? tweet.legacy?.entities.user_mentions,
-        //         photos:
-        //             tweet.photos ??
-        //             tweet.legacy?.entities.media?.filter(
-        //                 (media) => media.type === "photo"
-        //             ) ??
-        //             [],
-        //         thread: [],
-        //         urls: tweet.urls ?? tweet.legacy?.entities.urls,
-        //         videos:
-        //             tweet.videos ??
-        //             tweet.legacy?.entities.media?.filter(
-        //                 (media) => media.type === "video"
-        //             ) ??
-        //             [],
-        //     };
-        //     // console.log("obj is", obj);
-        //     return obj;
-        // });
+        const processedTimeline = homeTimeline
+        .filter((t) => t.__typename !== "TweetWithVisibilityResults")
+        .map((tweet) => {
+            // console.log("tweet is", tweet);
+            const obj = {
+                id: tweet.id,
+                name:
+                    tweet.name ??
+                    tweet?.user_results?.result?.legacy.name,
+                username:
+                    tweet.username ??
+                    tweet.core?.user_results?.result?.legacy.screen_name,
+                text: tweet.text ?? tweet.legacy?.full_text,
+                inReplyToStatusId:
+                    tweet.inReplyToStatusId ??
+                    tweet.legacy?.in_reply_to_status_id_str ??
+                    null,
+                createdAt: tweet.createdAt ?? tweet.legacy?.created_at ?? tweet.core?.user_results?.result?.legacy.created_at, 
+                userId: tweet.userId ?? tweet.legacy?.user_id_str,
+                conversationId:
+                    tweet.conversationId ??
+                    tweet.legacy?.conversation_id_str,
+                hashtags: tweet.hashtags ?? tweet.legacy?.entities.hashtags,
+                mentions:
+                    tweet.mentions ?? tweet.legacy?.entities.user_mentions,
+                photos:
+                    tweet.photos ??
+                    tweet.legacy?.entities.media?.filter(
+                        (media) => media.type === "photo"
+                    ) ??
+                    [],
+                thread: [],
+                urls: tweet.urls ?? tweet.legacy?.entities.urls,
+                videos:
+                    tweet.videos ??
+                    tweet.legacy?.entities.media?.filter(
+                        (media) => media.type === "video"
+                    ) ??
+                    [],
+            };
+            // console.log("obj is", obj);
+            return obj;
+        });
+        elizaLogger.debug("process homeTimeline", processedTimeline);
+        return processedTimeline;
     }
 
     async fetchSearchTweets(
