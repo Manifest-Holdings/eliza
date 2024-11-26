@@ -734,6 +734,16 @@ export async function generateMessageResponse({
     }
 }
 
+// Add this near the top of the file, with other imports and type definitions
+interface TogetherAIImageData {
+    url: string;
+    index: number;
+}
+
+interface TogetherAIImageResponse {
+    data: TogetherAIImageData[];
+}
+
 export const generateImage = async (
     data: {
         prompt: string;
@@ -762,10 +772,10 @@ export const generateImage = async (
     const model = getModel(runtime.character.modelProvider, ModelClass.IMAGE);
     const modelSettings = models[runtime.character.modelProvider].imageSettings;
     const apiKey =
-        runtime.token ??
         runtime.getSetting("HEURIST_API_KEY") ??
         runtime.getSetting("TOGETHER_API_KEY") ??
-        runtime.getSetting("OPENAI_API_KEY");
+        runtime.getSetting("OPENAI_API_KEY") ??
+        runtime.token;
     try {
         if (runtime.character.modelProvider === ModelProviderName.HEURIST) {
             const response = await fetch(
@@ -804,25 +814,31 @@ export const generateImage = async (
 
             const imageURL = await response.json();
             return { success: true, data: [imageURL] };
-        } else if (
-            runtime.character.modelProvider === ModelProviderName.LLAMACLOUD
-        ) {
+        } else {
+        // } else if (
+        //     runtime.character.modelProvider === ModelProviderName.LLAMACLOUD
+        // ) {
+            elizaLogger.log("Using Together AI for image generation");
             const together = new Together({ apiKey: apiKey as string });
             const response = await together.images.create({
-                model: "black-forest-labs/FLUX.1-schnell",
+                model: "black-forest-labs/FLUX.1.1-pro",
                 prompt,
                 width,
                 height,
                 steps: modelSettings?.steps ?? 4,
                 n: count,
             });
-            const urls: string[] = [];
-            for (let i = 0; i < response.data.length; i++) {
-                const json = response.data[i].b64_json;
-                // decode base64
-                const base64 = Buffer.from(json, "base64").toString("base64");
-                urls.push(base64);
-            }
+            // Recast since Together AI API changed but doesn't have latest type
+            const typedResponse = (response as unknown) as TogetherAIImageResponse;
+            elizaLogger.debug("Together AI response:", typedResponse);
+            const urls: string[] = typedResponse.data.map(item => item.url);
+            // const urls: string[] = [];
+            // for (let i = 0; i < response.data.length; i++) {
+            //     const json = response.data[i].b64_json;
+            //     // decode base64
+            //     const base64 = Buffer.from(json, "base64").toString("base64");
+            //     urls.push(base64);
+            // }
             const base64s = await Promise.all(
                 urls.map(async (url) => {
                     const response = await fetch(url);
@@ -834,28 +850,29 @@ export const generateImage = async (
                 })
             );
             return { success: true, data: base64s };
-        } else {
-            let targetSize = `${width}x${height}`;
-            if (
-                targetSize !== "1024x1024" &&
-                targetSize !== "1792x1024" &&
-                targetSize !== "1024x1792"
-            ) {
-                targetSize = "1024x1024";
-            }
-            const openai = new OpenAI({ apiKey: apiKey as string });
-            const response = await openai.images.generate({
-                model,
-                prompt,
-                size: targetSize as "1024x1024" | "1792x1024" | "1024x1792",
-                n: count,
-                response_format: "b64_json",
-            });
-            const base64s = response.data.map(
-                (image) => `data:image/png;base64,${image.b64_json}`
-            );
-            return { success: true, data: base64s };
         }
+        // } else {
+        //     let targetSize = `${width}x${height}`;
+        //     if (
+        //         targetSize !== "1024x1024" &&
+        //         targetSize !== "1792x1024" &&
+        //         targetSize !== "1024x1792"
+        //     ) {
+        //         targetSize = "1024x1024";
+        //     }
+        //     const openai = new OpenAI({ apiKey: apiKey as string });
+        //     const response = await openai.images.generate({
+        //         model,
+        //         prompt,
+        //         size: targetSize as "1024x1024" | "1792x1024" | "1024x1792",
+        //         n: count,
+        //         response_format: "b64_json",
+        //     });
+        //     const base64s = response.data.map(
+        //         (image) => `data:image/png;base64,${image.b64_json}`
+        //     );
+        //     return { success: true, data: base64s };
+        // }
     } catch (error) {
         console.error(error);
         return { success: false, error: error };
