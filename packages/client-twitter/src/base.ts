@@ -214,7 +214,7 @@ export class ClientBase extends EventEmitter {
         }
 
         await this.loadLatestCheckedTweetId();
-        await this.populateTimeline();
+        //await this.populateTimeline();
     }
 
     async fetchHomeTimeline(count: number): Promise<Tweet[]> {
@@ -615,16 +615,21 @@ export class ClientBase extends EventEmitter {
     }
 
     async getCachedTimeline(): Promise<Tweet[] | undefined> {
-        return await this.runtime.cacheManager.get<Tweet[]>(
-            `twitter/${this.profile.username}/timeline`
+        const key = `twitter/${this.profile.username}/timeline`;
+        const cachedTimeline = await this.runtime.cacheManager.get<Tweet[]>(
+            key
         );
+        elizaLogger.debug("cachedTimeline key:", key, " value:", cachedTimeline);
+        return cachedTimeline;
     }
 
     async cacheTimeline(timeline: Tweet[]) {
+        const key = `twitter/${this.profile.username}/timeline`;
+        elizaLogger.debug("caching timeline key:", key, " value:", timeline);
         await this.runtime.cacheManager.set(
-            `twitter/${this.profile.username}/timeline`,
+            key,
             timeline,
-            { expires: 10 * 1000 }
+            { expires: 5 * 60 * 1000 }
         );
     }
 
@@ -632,7 +637,7 @@ export class ClientBase extends EventEmitter {
         await this.runtime.cacheManager.set(
             `twitter/${this.profile.username}/mentions`,
             mentions,
-            { expires: 10 * 1000 }
+            { expires: 1 * 60 * 1000 }
         );
     }
 
