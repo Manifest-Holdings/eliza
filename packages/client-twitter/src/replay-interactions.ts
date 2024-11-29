@@ -175,7 +175,7 @@ export class TwitterReplayInteractionClient {
                 });
 
                 // Update the last checked tweet ID after processing each tweet
-                this.client.lastCheckedTweetId = parseInt(tweet.id);
+                //this.client.lastCheckedTweetId = parseInt(tweet.id);
             
             }
 
