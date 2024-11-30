@@ -217,7 +217,7 @@ export class PostgresDatabaseAdapter
         if (rows.length === 0) return null;
 
         const account = rows[0];
-        elizaLogger.debug("account", account);
+        // elizaLogger.debug("account", account);
         return {
             ...account,
             details:

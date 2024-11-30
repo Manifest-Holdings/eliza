@@ -98,10 +98,10 @@ export class TwitterReplayInteractionClient {
         this.until = until;
         const handleTwitterInteractionsLoop = () => {
             this.handleTwitterInteractions();
-            setTimeout(
-                handleTwitterInteractionsLoop,
-                (Math.floor(Math.random() * (5 - 2 + 1)) + 2) * 60 * 1000
-            ); // Random interval between 2-5 minutes
+            // setTimeout(
+            //     handleTwitterInteractionsLoop,
+            //     (Math.floor(Math.random() * (5 - 2 + 1)) + 2) * 60 * 1000
+            // ); // Random interval between 2-5 minutes
         };
         handleTwitterInteractionsLoop();
     }
@@ -180,7 +180,7 @@ export class TwitterReplayInteractionClient {
             }
 
             // Save the latest checked tweet ID to the file
-            await this.client.cacheLatestCheckedTweetId();
+            // await this.client.cacheLatestCheckedTweetId();
 
             elizaLogger.log("Finished checking Twitter interactions");
         } catch (error) {
