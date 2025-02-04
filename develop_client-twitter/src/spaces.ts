@@ -6,7 +6,7 @@ import {
     ModelClass,
     ServiceType,
     type ITranscriptionService,
-    TwitterSpaceDecisionOptions,
+    type TwitterSpaceDecisionOptions,
 } from "@elizaos/core";
 import type { ClientBase } from "./base";
 import {
@@ -387,10 +387,7 @@ export class TwitterSpaceClient {
                 process.exit(0);
             });
         } catch (error) {
-            elizaLogger.error("[Space] Error launching Space =>", {
-                error: error.message,
-                stack: error.stack
-            });
+            elizaLogger.error("[Space] Error launching Space =>", error);
             this.isSpaceRunning = false;
             throw error;
         }
