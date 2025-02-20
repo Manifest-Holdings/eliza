@@ -22,17 +22,16 @@ export class EmailAutomationService extends Service {
 
     async initialize(runtime: IAgentRuntime): Promise<void> {
         this.runtime = runtime;
+        elizaLogger.info("🔄 Initializing Email Automation Service...");
 
         // Check if enabled
         const isEnabled = runtime.getSetting('EMAIL_AUTOMATION_ENABLED')?.toLowerCase() === 'true' || false;
-        elizaLogger.debug(`📋 Email Automation Enabled: ${isEnabled}`);
+        elizaLogger.info(`📋 Email Automation Enabled: ${isEnabled}`);
 
         if (!isEnabled) {
-            elizaLogger.debug("❌ Email automation is disabled");
+            elizaLogger.info("❌ Email automation is disabled");
             return;
         }
-
-        elizaLogger.info("🔄 Initializing Email Automation Service...");
 
         try {
             // Required settings
@@ -84,7 +83,7 @@ export class EmailAutomationService extends Service {
         return {
             memory,
             state,
-            metadata: state?.metadata as Record<string, unknown>  || {},
+            metadata: state?.metadata || {},
             timestamp: new Date(),
             conversationId: memory.id || ''
         };
@@ -126,28 +125,39 @@ export class EmailAutomationService extends Service {
 
     private async shouldSendEmail(context: EmailContext): Promise<boolean> {
         elizaLogger.info("🤔 Evaluating if message should trigger email...");
+
+        // Now TypeScript knows we're using the full State type
+        elizaLogger.info("🔍 Full state debug:", {
+            message: context.state.message?.content?.text || 'No message text',
+            recentMessages: context.state.recentMessages || [],
+            // agentName: context.state.agentName || 'Unknown',
+            // bio: context.state.bio || '',
+            // topics: context.state.topics || [],
+            // rawState: context.state
+        });
+
         const customPrompt = this.runtime.getSetting('EMAIL_EVALUATION_PROMPT');
         const template = customPrompt || shouldEmailTemplate;
 
-        elizaLogger.debug("📝 Using template:", {
-            isCustom: !!customPrompt,
-            templateLength: template.length
+        const composedContext = composeContext({
+            state: context.state,  // Now properly typed as EmailState
+            template
+        });
+
+        // Log the actual composed context
+        elizaLogger.debug("📝 Template variables:", {
+            messageText: context.memory?.content?.text || 'No message text',
+            composedContextStart: composedContext.substring(0, 200)
         });
 
         const decision = await generateText({
             runtime: this.runtime,
-            context: composeContext({
-                state: context.state,
-                template
-            }),
+            context: composedContext,
             modelClass: ModelClass.SMALL
         });
 
         elizaLogger.info("📝 Final composed prompt:", {
-            prompt: composeContext({
-                state: context.state,
-                template
-            })
+            prompt: composedContext
         });
 
         const shouldEmail = decision.includes("[EMAIL]");
@@ -161,34 +171,74 @@ export class EmailAutomationService extends Service {
 
     private async handleEmailTrigger(context: EmailContext) {
         try {
-            // Extract user info and format Discord ID if present
+            // Extract name and contact info from the message text
+            const messageLines = context.memory.content.text.split('\n');
+            const nameMatch = messageLines.find(line => line.includes('Cooper Ribb'));
+            const emailMatch = messageLines.find(line => line.includes('@'));
+            const phoneMatch = messageLines.find(line => line.includes('512-'));
+            const linkedinMatch = messageLines.find(line => line.includes('linkedin.com'));
+            const githubMatch = messageLines.find(line => line.includes('github.com'));
+
             const userInfo = {
                 id: context.memory.userId,
-                displayName: this.formatUserIdentifier(context.memory.userId),
+                displayName: nameMatch ? nameMatch.trim() : this.formatUserIdentifier(context.memory.userId),
+                email: emailMatch ? emailMatch.match(/[\w.-]+@[\w.-]+\.\w+/)?.[0] : '',
+                phone: phoneMatch ? phoneMatch.match(/\d{3}-\d{3}-\d{4}/)?.[0] : '',
+                linkedin: linkedinMatch ? linkedinMatch.match(/linkedin\.com\/[\w-]+/)?.[0] : '',
+                github: githubMatch ? githubMatch.match(/github\.com\/[\w-]+/)?.[0] : '',
                 platform: this.detectPlatform(context.memory.userId),
                 metadata: context.metadata || {}
             };
 
-            // Parse message content for relevant details
+            // Format contact info nicely
+            const contactLines = [
+                userInfo.displayName,
+                [userInfo.email, userInfo.phone].filter(Boolean).join(' | '),
+                [
+                    userInfo.linkedin ? `LinkedIn: ${userInfo.linkedin}` : '',
+                    userInfo.github ? `GitHub: ${userInfo.github}` : ''
+                ].filter(Boolean).join(' | ')
+            ].filter(Boolean);
+
             const messageText = context.memory.content.text;
             const enhancedContext = {
                 ...context.state,
+                message: messageText,
                 userInfo,
                 platform: userInfo.platform,
-                originalMessage: messageText,
-                // Let the LLM extract and structure the details from the original message
-                // rather than hardcoding values
-                messageContent: messageText
+                userId: userInfo.id,
+                senderName: userInfo.displayName,
+                contactInfo: contactLines.join('\n'),
+                previousMessages: messageText,
+                bio: '',
+                lore: ''
             };
+
+            elizaLogger.info("🔍 Enhanced Context:", {
+                enhancedContext,
+                messageLength: messageText.length,
+                userDetails: userInfo
+            });
+
+            const emailPrompt = composeContext({
+                state: enhancedContext,
+                template: emailFormatTemplate
+            });
+
+            elizaLogger.info("📧 Generated Email Prompt:", {
+                fullPrompt: emailPrompt,
+                template: emailFormatTemplate
+            });
 
             // Generate content with enhanced context
             const formattedEmail = await generateText({
                 runtime: this.runtime,
-                context: composeContext({
-                    state: enhancedContext,
-                    template: emailFormatTemplate
-                }),
+                context: emailPrompt,
                 modelClass: ModelClass.SMALL
+            });
+
+            elizaLogger.info("📧 LLM Generated Email:", {
+                formattedEmail: formattedEmail
             });
 
             // Parse and validate sections
@@ -205,10 +255,18 @@ export class EmailAutomationService extends Service {
                 throw new Error("Email generation failed: No key points generated");
             }
 
-            // If validation passes, create email content
+            // Create email content with ALL sections
             const emailContent: GeneratedEmailContent = {
                 subject: sections.subject,
                 blocks: [
+                    // Replace the old contact block with our formatted version
+                    {
+                        type: 'paragraph',
+                        content: enhancedContext.contactInfo,  // This uses our nicely formatted contactLines
+                        metadata: {
+                            style: 'margin-bottom: 1.5em; font-family: monospace; white-space: pre;'
+                        }
+                    },
                     {
                         type: 'paragraph',
                         content: sections.background,
@@ -223,6 +281,24 @@ export class EmailAutomationService extends Service {
                     {
                         type: 'bulletList',
                         content: sections.keyPoints
+                    },
+                    // Add Technical Details section
+                    {
+                        type: 'heading',
+                        content: 'Technical Details'
+                    },
+                    {
+                        type: 'bulletList',
+                        content: sections.technicalDetails || []
+                    },
+                    // Add Next Steps section
+                    {
+                        type: 'heading',
+                        content: 'Next Steps'
+                    },
+                    {
+                        type: 'bulletList',
+                        content: sections.nextSteps || []
                     }
                 ],
                 metadata: {
@@ -232,38 +308,15 @@ export class EmailAutomationService extends Service {
                 }
             };
 
-            // Add optional technical details if present
-            if (sections.technicalDetails?.length) {
-                emailContent.blocks.push(
-                    {
-                        type: 'heading',
-                        content: 'Technical Details'
-                    },
-                    {
-                        type: 'bulletList',
-                        content: sections.technicalDetails
-                    }
-                );
-            }
-
-            // Add next steps if present
-            if (sections.nextSteps?.length) {
-                emailContent.blocks.push(
-                    {
-                        type: 'heading',
-                        content: 'Next Steps'
-                    },
-                    {
-                        type: 'bulletList',
-                        content: sections.nextSteps
-                    }
-                );
-            }
-
             elizaLogger.info("📋 Email content prepared:", {
                 subject: emailContent.subject,
                 blocksCount: emailContent.blocks.length,
-                metadata: emailContent.metadata
+                sections: {
+                    hasBackground: !!sections.background,
+                    keyPointsCount: sections.keyPoints.length,
+                    technicalDetailsCount: sections.technicalDetails?.length,
+                    nextStepsCount: sections.nextSteps?.length
+                }
             });
 
             const emailOptions = {
@@ -292,6 +345,9 @@ export class EmailAutomationService extends Service {
 
     private parseFormattedEmail(formattedEmail: string): {
         subject: string;
+        applicant?: string;
+        contact?: string;
+        platform?: string;
         background: string;
         keyPoints: string[];
         technicalDetails?: string[];
@@ -299,70 +355,51 @@ export class EmailAutomationService extends Service {
     } {
         const sections: any = {};
 
-        try {
-            // Extract subject
-            const subjectMatch = formattedEmail.match(/Subject: (.+?)(?:\n|$)/);
-            sections.subject = subjectMatch?.[1]?.trim() || 'New Connection Request';
-            elizaLogger.debug("📝 Parsed subject:", sections.subject);
+        // Extract subject
+        const subjectMatch = formattedEmail.match(/Subject:\s*(.+?)(?=\n|$)/i);
+        sections.subject = subjectMatch?.[1]?.trim() || '';
 
-            // Extract background
-            const backgroundMatch = formattedEmail.match(/Background:\n([\s\S]*?)(?=\n\n|Key Points:|$)/);
-            sections.background = backgroundMatch?.[1]?.trim() || '';
-            elizaLogger.debug("📝 Parsed background:", {
-                found: !!backgroundMatch,
-                length: sections.background.length
-            });
+        // Extract applicant info
+        const applicantMatch = formattedEmail.match(/Applicant:\s*(.+?)(?=\n|Contact:|$)/i);
+        sections.applicant = applicantMatch?.[1]?.trim();
 
-            // Extract key points
-            const keyPointsMatch = formattedEmail.match(/Key Points:\n([\s\S]*?)(?=\n\n|Technical Details:|Next Steps:|$)/);
-            sections.keyPoints = keyPointsMatch?.[1]
-                ?.split('\n')
-                .filter(point => point.trim())
-                .map(point => point.trim().replace(/^[•\-]\s*/, '')) || [];
-            elizaLogger.debug("📝 Parsed key points:", {
-                count: sections.keyPoints.length,
-                points: sections.keyPoints
-            });
+        // Extract contact info
+        const contactMatch = formattedEmail.match(/Contact:\s*(.+?)(?=\n|Platform:|Background:|$)/i);
+        sections.contact = contactMatch?.[1]?.trim();
 
-            // Extract technical details (optional)
-            const technicalMatch = formattedEmail.match(/Technical Details:\n([\s\S]*?)(?=\n\n|Next Steps:|$)/);
-            if (technicalMatch) {
-                sections.technicalDetails = technicalMatch[1]
-                    ?.split('\n')
-                    .filter(point => point.trim())
-                    .map(point => point.trim().replace(/^[•\-]\s*/, ''));
-                elizaLogger.debug("📝 Parsed technical details:", {
-                    count: sections.technicalDetails.length
-                });
-            }
+        // Extract platform info
+        const platformMatch = formattedEmail.match(/Platform:\s*(.+?)(?=\n|Background:|$)/i);
+        sections.platform = platformMatch?.[1]?.trim();
 
-            // Extract next steps
-            const nextStepsMatch = formattedEmail.match(/Next Steps:\n([\s\S]*?)(?=\n\n|$)/);
-            sections.nextSteps = nextStepsMatch?.[1]
-                ?.split('\n')
-                .filter(step => step.trim())
-                .map(step => step.trim().replace(/^(\d+\.|\-|\•)\s*/, '')) || [];
-            elizaLogger.debug("📝 Parsed next steps:", {
-                count: sections.nextSteps.length
-            });
+        // Extract background
+        const backgroundMatch = formattedEmail.match(/Background:\s*([\s\S]*?)(?=\n\n|Key Points:|$)/i);
+        sections.background = backgroundMatch?.[1]?.trim() || '';
 
-            // Validate required sections
-            if (!sections.subject || !sections.background || !sections.keyPoints.length) {
-                elizaLogger.warn("⚠️ Missing required sections:", {
-                    hasSubject: !!sections.subject,
-                    hasBackground: !!sections.background,
-                    keyPointsCount: sections.keyPoints.length
-                });
-            }
+        // Extract key points
+        const keyPointsMatch = formattedEmail.match(/Key Points:\n([\s\S]*?)(?=\n\n|Technical Details:|Next Steps:|$)/);
+        sections.keyPoints = keyPointsMatch?.[1]
+            ?.split('\n')
+            .map(point => point.trim())
+            .filter(point => point.startsWith('•'))
+            .map(point => point.replace('•', '').trim()) || [];
 
-            return sections;
-        } catch (error) {
-            elizaLogger.error("❌ Error parsing email format:", {
-                error: error instanceof Error ? error.message : String(error),
-                sections: Object.keys(sections)
-            });
-            throw new Error(`Failed to parse email format: ${error}`);
-        }
+        // Extract technical details
+        const technicalDetailsMatch = formattedEmail.match(/Technical Details:\n([\s\S]*?)(?=\n\n|Next Steps:|$)/);
+        sections.technicalDetails = technicalDetailsMatch?.[1]
+            ?.split('\n')
+            .map(point => point.trim())
+            .filter(point => point.startsWith('•'))
+            .map(point => point.replace('•', '').trim()) || [];
+
+        // Extract next steps
+        const nextStepsMatch = formattedEmail.match(/Next Steps:\n([\s\S]*?)(?=\n\n|$)/);
+        sections.nextSteps = nextStepsMatch?.[1]
+            ?.split('\n')
+            .map(point => point.trim())
+            .filter(point => point.startsWith('•') || /^\d+\./.test(point))  // Check for bullets or numbers
+            .map(point => point.replace(/^(\d+\.|•)/, '').trim()) || [];
+
+        return sections;
     }
 
     private formatUserIdentifier(userId: string): string {

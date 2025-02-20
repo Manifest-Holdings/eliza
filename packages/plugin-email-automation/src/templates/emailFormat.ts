@@ -1,9 +1,10 @@
 export const emailFormatTemplate = `
 <context>
 # Conversation Details
-User ID: {{memory.userId}}
-Name: {{memory.senderName}}
-Bio: {{memory.bio}}
+User ID: {{userId}}
+Name: {{senderName}}
+Platform: {{platform}}
+Bio: {{bio}}
 Recent Messages: {{previousMessages}}
 </context>
 
@@ -41,6 +42,8 @@ Then, format an email summary using EXACTLY this format:
 <email_format>
 Subject: [Clear, specific title with role/company]
 
+{{contactInfo}}
+
 Background:
 [2-3 sentences about who they are and relevant context, based on extracted quotes]
 
@@ -59,7 +62,7 @@ Output the email in this exact format, omitting sections if insufficient informa
 </instructions>
 
 <final_thought>
-Remember: Be concise and factual. Focus on actionable information over general statements. Do not include details that aren't supported by extracted quotes.
+Remember: Be concise and factual. Focus on actionable information over general statements. Include the applicant's contact details at the start of the email.
 </final_thought>
 `;
 

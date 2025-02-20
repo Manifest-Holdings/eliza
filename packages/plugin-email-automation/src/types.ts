@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type{ IAgentRuntime as CoreAgentRuntime, Memory, State } from "@elizaos/core";
+import { IAgentRuntime as CoreAgentRuntime, Memory, State as CoreState } from "@elizaos/core";
 
 export interface EmailOptions {
     from: string;
@@ -225,7 +225,7 @@ export interface GenerateTextOptions {
     tools?: {
         [key: string]: {
             type: "function";
-            parameters: unknown;
+            parameters: any;
             description?: string;
         };
     };
@@ -254,10 +254,27 @@ export interface EmailCondition {
     evaluate(context: EmailContext): boolean;
 }
 
+interface MessageContent {
+    text: string;
+    attachments?: any[];
+    source?: string;
+    url?: string;
+}
+
+interface Message {
+    content: MessageContent;
+    userId: string;
+    id: string;
+}
+
+interface EmailState extends CoreState {
+    message?: Message;
+}
+
 export interface EmailContext {
     memory: Memory;
-    state: State;
-    metadata: Record<string, unknown>;
+    state: EmailState;
+    metadata: Record<string, any>;
     timestamp: Date;
     conversationId: string;
 }
