@@ -833,7 +833,7 @@ export class TwitterPostClient {
                     const actionResponse = await generateTweetActions({
                         runtime: this.runtime,
                         context: actionContext,
-                        modelClass: ModelClass.LARGE,
+                        modelClass: ModelClass.SMALL,
                     });
 
                     if (!actionResponse) {

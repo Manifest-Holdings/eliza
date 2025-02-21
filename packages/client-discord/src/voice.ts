@@ -862,7 +862,7 @@ export class VoiceManager extends EventEmitter {
         const response = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
         });
 
         if (response === "RESPOND") {
