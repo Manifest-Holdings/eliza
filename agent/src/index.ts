@@ -383,6 +383,14 @@ function patchupCharacter(character) {
     character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST = "" + character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST
     //console.log('making settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST a string', typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST, character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST)
   }
+  // Email automation
+  if (character.settings?.secrets?.EMAIL_AUTOMATION_ENABLED !== undefined && typeof character.settings.secrets.EMAIL_AUTOMATION_ENABLED === 'boolean') {
+    character.settings.secrets.EMAIL_AUTOMATION_ENABLED = "" + character.settings.secrets.EMAIL_AUTOMATION_ENABLED
+  }
+  // Twitter spaces
+  if (character.settings?.secrets?.TWITTER_SPACES_ENABLE !== undefined && typeof character.settings.secrets.TWITTER_SPACES_ENABLE === 'boolean') {
+    character.settings.secrets.TWITTER_SPACES_ENABLE = "" + character.settings.secrets.TWITTER_SPACES_ENABLE
+  }
 }
 
 async function jsonToCharacter(

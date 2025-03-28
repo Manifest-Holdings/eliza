@@ -552,12 +552,15 @@ export class TwitterInteractionClient {
                         ?.tweetId;
 
                     await this.runtime.processActions(
-                        message,
+                        {...message,
+                            content: {
+                                ...message.content,
+                                tweet,
+                            }
+                        },
                         responseMessages,
                         state,
-                        (response: Content) => {
-                            return callback(response, responseTweetId);
-                        }
+                        callback
                     );
 
                     const responseInfo = `Context:\n\n${context}\n\nSelected Post: ${tweet.id} - ${tweet.username}: ${tweet.text}\nAgent's Output:\n${response.text}`;

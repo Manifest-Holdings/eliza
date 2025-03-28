@@ -1,11 +1,11 @@
 # Name our workflow
-name: Production Deployment
+name: Staging Deployment
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "prod" branch (our Production)
+  # Triggers the workflow on push or pull request events but only for the "next" branch (our Staging)
   push:
-    branches: [ prod ]
+    branches: [ next ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -36,4 +36,4 @@ jobs:
       # Connect to our server and run the update script
       - name: Deploy
         run: |
-          ssh ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_IP }} '${{ secrets.PROD_DEPLOY_COMMAND }}'
+          ssh ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_IP }} '${{ secrets.NEXT_DEPLOY_COMMAND }}'
