@@ -61,9 +61,13 @@ export const webSearch: Action = {
         callback: HandlerCallback
     ) => {
         elizaLogger.log("Composing state for message:", message);
-        state = (await runtime.composeState(message)) as State;
-        const userId = runtime.agentId;
-        elizaLogger.log("User ID:", userId);
+        
+        // Initialize or update state
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
 
         const webSearchPrompt = message.content.text;
         elizaLogger.log("web search prompt received:", webSearchPrompt);
@@ -75,22 +79,38 @@ export const webSearch: Action = {
         );
 
         if (searchResponse && searchResponse.results.length) {
-            const responseList = searchResponse.answer
-                ? `${searchResponse.answer}${
-                      Array.isArray(searchResponse.results) &&
-                      searchResponse.results.length > 0
-                          ? `\n\nFor more details, you can check out these resources:\n${searchResponse.results
-                                .map(
-                                    (result: SearchResult, index: number) =>
-                                        `${index + 1}. [${result.title}](${result.url})`
-                                )
-                                .join("\n")}`
-                          : ""
-                  }`
-                : "";
+            // Format results into a searchable context
+            const searchContext = [
+                searchResponse.answer,
+                ...searchResponse.results.map(result => `${result.title}\n${result.content}`)
+            ].filter(Boolean).join('\n\n');
+            
+            // Update state with search results
+            state = await runtime.composeState(message, {
+                ...state,
+                searchContext: searchContext,
+                searchMetadata: {
+                    query: webSearchPrompt,
+                    timestamp: new Date().toISOString(),
+                    resultCount: searchResponse.results.length
+                }
+            });
+
+            // Format a user-friendly response
+            const formattedResults = searchResponse.results
+                .map((result, i) => `${i + 1}. [${result.title}](${result.url})`)
+                .join('\n');
 
             callback({
-                text: MaxTokens(responseList, DEFAULT_MAX_WEB_SEARCH_TOKENS),
+                text: searchResponse.answer 
+                    ? `${searchResponse.answer}\n\nRelevant sources:\n\n${formattedResults}`
+                    : `Found ${searchResponse.results.length} relevant results:\n\n${formattedResults}`,
+                metadata: {
+                    count: searchResponse.results.length,
+                    results: searchResponse.results,
+                    query: webSearchPrompt,
+                    context: searchContext
+                }
             });
         } else {
             elizaLogger.error("search failed or returned no data.");
