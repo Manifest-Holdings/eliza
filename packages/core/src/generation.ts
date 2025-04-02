@@ -174,6 +174,7 @@ import {
     writeFileSync,
     readdirSync,
     unlinkSync,
+    renameSync,
 } from "fs";
 import { resolve, dirname } from "path";
 
@@ -211,7 +212,7 @@ function mkdirpSync(targetPath) {
     return targetPath;
 }
 
-function logGenerate(
+async function logGenerate(
     type: "text" | "image",
     agentId: string,
     provider: string,
@@ -271,17 +272,69 @@ function logGenerate(
     const ts = Date.now();
     const jsonLogFilePath = `${dirJson}/${ts}.json`;
 
-    // Log file writing attempt
+    // Log file writing attempt with retries
     elizaLogger.debug(`Attempting to write log file: ${jsonLogFilePath}`);
-    try {
-        writeFileSync(jsonLogFilePath, JSON.stringify(logData));
-        elizaLogger.debug(`Successfully wrote log file: ${jsonLogFilePath}`);
-    } catch (err) {
-        elizaLogger.error("Error writing log file:", {
-            path: jsonLogFilePath,
-            error: err,
-        });
-        return; // Exit if we can't write the log file
+    let retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = 1000; // 1 second
+
+    while (retryCount < maxRetries) {
+        try {
+            // Check if directory exists and is writable
+            try {
+                accessSync(dirJson, fs.constants.W_OK);
+            } catch (err) {
+                elizaLogger.error("Directory is not writable:", {
+                    dir: dirJson,
+                    error: err
+                });
+                throw err;
+            }
+
+            // Check available disk space (if on Unix-like system)
+            try {
+                const { execSync } = require('child_process');
+                const df = execSync('df -k .').toString();
+                const availableSpace = parseInt(df.split('\n')[1].split(/\s+/)[3]);
+                if (availableSpace < 1000000) { // Less than 1GB available
+                    elizaLogger.error("Low disk space:", {
+                        availableSpace,
+                        dir: dirJson
+                    });
+                    throw new Error("Insufficient disk space");
+                }
+            } catch (err) {
+                // Ignore disk space check errors on Windows or if command fails
+                elizaLogger.debug("Could not check disk space:", err);
+            }
+
+            // Write the file with a temporary name first
+            const tempFilePath = `${jsonLogFilePath}.tmp`;
+            writeFileSync(tempFilePath, JSON.stringify(logData));
+
+            // Rename the temporary file to the actual file
+            // This is atomic and prevents partial writes
+            renameSync(tempFilePath, jsonLogFilePath);
+
+            elizaLogger.debug(`Successfully wrote log file: ${jsonLogFilePath}`);
+            break; // Success, exit retry loop
+        } catch (err) {
+            retryCount++;
+            elizaLogger.error("Error writing log file:", {
+                path: jsonLogFilePath,
+                error: err,
+                retryCount,
+                maxRetries
+            });
+
+            if (retryCount === maxRetries) {
+                elizaLogger.error("Max retries reached, giving up on writing log file");
+                return; // Exit if we can't write the log file after all retries
+            }
+
+            // Wait before retrying, with exponential backoff
+            await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, retryCount - 1)));
+        }
     }
 
     // Clean up old log files
@@ -292,10 +345,10 @@ function logGenerate(
         );
         elizaLogger.debug(`Found ${files.length} log files`);
 
-        if (files.length > 10) {
+        if (files.length > 100) {
             const oldFiles = files
                 .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
-                .slice(0, files.length - 10);
+                .slice(0, files.length - 100);
 
             elizaLogger.debug(
                 `Attempting to delete ${oldFiles.length} old files`
@@ -1485,7 +1538,40 @@ export async function generateText({
                 throw new Error(errorMessage);
             }
         }
-        logGenerate(
+        // Forceful IGNORE checking
+        if (response) {
+            const trimmedResponse = response.trim();
+
+            // Check for standalone IGNORE
+            if (trimmedResponse === "IGNORE") {
+                elizaLogger.debug("Response contains standalone IGNORE - filtering out");
+                return "";
+            }
+
+            // Check for IGNORE in malformed or partial JSON
+            if (trimmedResponse.includes('"action":"IGNORE"') ||
+                trimmedResponse.includes("'action':'IGNORE'")) {
+                elizaLogger.debug("Response contains IGNORE action - filtering out");
+                return "";
+            }
+
+            // Check for JSON containing IGNORE
+            try {
+                // Only try to parse if it looks like JSON (starts with { or [)
+                if (trimmedResponse.startsWith('{') || trimmedResponse.startsWith('[')) {
+                    const jsonResponse = JSON.parse(trimmedResponse);
+                    if (JSON.stringify(jsonResponse).includes("IGNORE")) {
+                        elizaLogger.debug("Response contains JSON with IGNORE - filtering out");
+                        return "";
+                    }
+                }
+            } catch (e) {
+                // Not valid JSON, continue with normal response
+            }
+        }
+
+
+        await logGenerate(
             "text",
             runtime.agentId,
             provider,
@@ -1497,7 +1583,7 @@ export async function generateText({
         );
         return response;
     } catch (error) {
-        logGenerate(
+        await logGenerate(
             "text",
             runtime.agentId,
             provider,
@@ -1934,7 +2020,7 @@ export const generateImage = async (
             }
 
             const imageURL = await response.json();
-            logGenerate(
+            await logGenerate(
                 "image",
                 runtime.agentId,
                 runtime.imageModelProvider,
@@ -2001,8 +2087,7 @@ export const generateImage = async (
                 throw new Error("No images generated by Together AI");
             }
 
-            elizaLogger.debug(`Generated ${base64s.length} images`);
-            logGenerate(
+            await logGenerate(
                 "image",
                 runtime.agentId,
                 runtime.imageModelProvider,
@@ -2065,7 +2150,7 @@ export const generateImage = async (
             });
 
             const base64s = await Promise.all(base64Promises);
-            logGenerate(
+            await logGenerate(
                 "image",
                 runtime.agentId,
                 runtime.imageModelProvider,
@@ -2115,7 +2200,7 @@ export const generateImage = async (
                 }
                 return `data:image/png;base64,${base64String}`;
             });
-            logGenerate(
+            await logGenerate(
                 "image",
                 runtime.agentId,
                 runtime.imageModelProvider,
@@ -2163,7 +2248,7 @@ export const generateImage = async (
                 }
                 return `data:image/png;base64,${base64String}`;
             });
-            logGenerate(
+            await logGenerate(
                 "image",
                 runtime.agentId,
                 runtime.imageModelProvider,
@@ -2227,7 +2312,7 @@ export const generateImage = async (
                         return `data:image/jpeg;base64,${base64}`;
                     })
                 );
-                logGenerate(
+                await logGenerate(
                     "image",
                     runtime.agentId,
                     runtime.imageModelProvider,
@@ -2271,7 +2356,7 @@ export const generateImage = async (
             const base64s = response.data.map(
                 (image) => `data:image/png;base64,${image.b64_json}`
             );
-            logGenerate(
+            await logGenerate(
                 "image",
                 runtime.agentId,
                 runtime.imageModelProvider,
@@ -2284,7 +2369,7 @@ export const generateImage = async (
             return { success: true, data: base64s };
         }
     } catch (error) {
-        logGenerate(
+        await logGenerate(
             "image",
             runtime.agentId,
             runtime.imageModelProvider,
