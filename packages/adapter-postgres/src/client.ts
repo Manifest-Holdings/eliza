@@ -559,7 +559,7 @@ export class PostgresDatabaseAdapter
             });
 
             let isUnique = true;
-            if (memory.embedding) {
+            if (memory.embedding && memory.embedding?.length) {
                 const similarMemories = await this.searchMemoriesByEmbedding(
                     memory.embedding,
                     {
@@ -570,6 +570,8 @@ export class PostgresDatabaseAdapter
                     }
                 );
                 isUnique = similarMemories.length === 0;
+            } else {
+              console.log('createMemory had no embedding')
             }
 
             await this.pool.query(
