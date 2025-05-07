@@ -70,6 +70,12 @@ async function set(
     chunkSize = 512,
     bleed = 20
 ) {
+    if (!item.content.length) {
+      return;
+    }
+
+    const zv = getEmbeddingZeroVector()
+    console.log('knowledge::set', zv.length)
     await runtime.documentsManager.createMemory({
         id: item.id,
         agentId: runtime.agentId,
@@ -77,14 +83,18 @@ async function set(
         userId: runtime.agentId,
         createdAt: Date.now(),
         content: item.content,
-        embedding: getEmbeddingZeroVector(),
+        embedding: zv,
     });
 
     const preprocessed = preprocess(item.content.text);
-    
+    if (!preprocessed.length) {
+      return;
+    }
+
     // If text is shorter than chunk size, don't split it
     if (preprocessed.length <= chunkSize) {
         const embedding = await embed(runtime, preprocessed);
+        console.log('knowledge::set - got embed', embedding.length, 'pplen', preprocessed.length)
         await runtime.knowledgeManager.createMemory({
             id: stringToUuid(item.id + preprocessed),
             roomId: runtime.agentId,
@@ -104,6 +114,7 @@ async function set(
 
     for (const fragment of fragments) {
         const embedding = await embed(runtime, fragment);
+        console.log('knowledge::set - got chunk embed', embedding.length, 'fglen', fragment.length)
         await runtime.knowledgeManager.createMemory({
             // We namespace the knowledge base uuid to avoid id
             // collision with the document above.
