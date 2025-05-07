@@ -460,6 +460,7 @@ export async function loadCharacters(
     return loadedCharacters;
 }
 
+/*
 async function handlePluginImporting(plugins: string[]) {
     if (plugins.length > 0) {
         elizaLogger.info("Plugins are: ", plugins);
@@ -472,6 +473,7 @@ async function handlePluginImporting(plugins: string[]) {
                             .replace("@elizaos/plugin-", "")
                             .replace(/-./g, (x) => x[1].toUpperCase()) +
                         "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+                    console.log('functionName', functionName)
                     return (
                         importedPlugin.default || importedPlugin[functionName]
                     );
@@ -489,8 +491,8 @@ async function handlePluginImporting(plugins: string[]) {
         return [];
     }
 }
+*/
 
-/*
 async function handlePluginImporting(plugins: string[]) {
     if (plugins.length > 0) {
         // this logging should happen before calling, so we can include important context
@@ -508,6 +510,7 @@ async function handlePluginImporting(plugins: string[]) {
                     if (!importedPlugin[functionName] && !importedPlugin.default) {
                       elizaLogger.warn(plugin, 'does not have an default export or', functionName)
                     }
+                    console.log('functionName', functionName)
                     return {...(
                         importedPlugin.default || importedPlugin[functionName]
                     ), npmName: plugin };
@@ -526,7 +529,6 @@ async function handlePluginImporting(plugins: string[]) {
         return [];
     }
 }
-*/
 
 export function getTokenForProvider(
     provider: ModelProviderName,
@@ -837,7 +839,8 @@ async function findDatabaseAdapter(runtime: AgentRuntime) {
   let adapter: Adapter | undefined;
   // if not found, default to sqlite
   if (adapters.length === 0) {
-    const sqliteAdapterPlugin = await import('@elizaos-plugins/adapter-sqlite');
+    //const sqliteAdapterPlugin = await import('@elizaos-plugins/adapter-sqlite');
+    const sqliteAdapterPlugin = await import('@elizaos/adapter-postgres');
     const sqliteAdapterPluginDefault = sqliteAdapterPlugin.default;
     adapter = sqliteAdapterPluginDefault.adapters[0];
     if (!adapter) {
