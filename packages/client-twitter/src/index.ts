@@ -1,4 +1,4 @@
-import { type Client, elizaLogger, type IAgentRuntime } from "@elizaos/core";
+import { type Client, elizaLogger, type IAgentRuntime, type ClientInstance } from "@elizaos/core";
 import { ClientBase, getScraper } from "./base.ts";
 import { validateTwitterConfig, type TwitterConfig } from "./environment.ts";
 import { TwitterInteractionClient } from "./interactions.ts";
@@ -61,6 +61,7 @@ class TwitterManager {
 
 export const TwitterClientInterface: Client = {
     runtime: false,
+    name: 'Twitter',
     async start(runtime: IAgentRuntime) {
         let twitterConfig: TwitterConfig;
         try {
@@ -75,7 +76,7 @@ export const TwitterClientInterface: Client = {
                     process.env.TWITTER_EMAIL,
                 error
             );
-            return;
+            return false;
         }
         if (!twitterConfig.TWITTER_USERNAME) {
             elizaLogger.error("Twitter failed to validate config, no username");
@@ -85,6 +86,7 @@ export const TwitterClientInterface: Client = {
         elizaLogger.log("Twitter client started");
 
         const manager = new TwitterManager(runtime, twitterConfig);
+        this.runtime = runtime
 
         async function checkStart() {
             if (manager.client.twitterClient) {
@@ -157,6 +159,7 @@ export const TwitterClientInterface: Client = {
             return { success: false, message: error.message || error };
         }
     },
+    /*
     async stop(runtime: IAgentRuntime) {
         elizaLogger.log(
             `Twitter client stop for ${runtime.character.name} (${runtime.agentId})`
@@ -181,6 +184,7 @@ export const TwitterClientInterface: Client = {
         // mark it offline
         delete runtime.clients.twitter;
     },
+    */
 };
 
 export default TwitterClientInterface;
