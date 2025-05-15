@@ -19,7 +19,7 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "workspace:*"
+        "@elizaos/core-plugin-v1": "workspace:*"
     },
     "devDependencies": {
         "@types/node": "^22.10.5",

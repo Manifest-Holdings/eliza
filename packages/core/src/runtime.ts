@@ -516,7 +516,7 @@ export class AgentRuntime implements IAgentRuntime {
             elizaLogger.info(
                 `[RAG Check] RAG Knowledge enabled: ${this.character.settings.ragKnowledge ? true : false}`,
             );
-            elizaLogger.info(
+            elizaLogger.debug(
                 `[RAG Check] Knowledge items:`,
                 this.character.knowledge,
             );
@@ -642,28 +642,42 @@ export class AgentRuntime implements IAgentRuntime {
      * @param knowledge An array of knowledge items containing id, path, and content.
      */
     private async processCharacterKnowledge(items: string[]) {
-        for (const item of items) {
-            const knowledgeId = stringToUuid(item);
-            const existingDocument =
-                await this.documentsManager.getMemoryById(knowledgeId);
-            if (existingDocument) {
-                continue;
+        const ids = items.map(i => stringToUuid(i));
+        const exists = await this.documentsManager.getMemoriesByIds(ids);
+        const toAdd = [];
+        for(const i in items) {
+          const exist = exists[i];
+          if (!exist) {
+            toAdd.push([items[i], ids[i]]);
+          }
+        }
+        if (!toAdd.length) return;
+        elizaLogger.info('discovered ' + toAdd.length + ' new knowledge items')
+        const chunkSize = 512;
+        const ps = [];
+        for (const a of toAdd) {
+            const item = a[0];
+            const knowledgeId = a[1];
+
+            if (item.length > chunkSize) {
+              // these are just slower
+              elizaLogger.info(
+                  this.character.name,
+                  " knowledge item over 512 characters, splitting - ",
+                  item.slice(0, 100),
+              );
             }
 
-            elizaLogger.info(
-                "Processing knowledge for ",
-                this.character.name,
-                " - ",
-                item.slice(0, 100),
-            );
-
-            await knowledge.set(this, {
+            ps.push(knowledge.set(this, {
                 id: knowledgeId,
                 content: {
                     text: item,
                 },
-            });
+            }));
         }
+        // wait for it all to be added
+        await Promise.all(ps);
+        elizaLogger.success(this.character.name, 'knowledge is synchronized');
     }
 
     /**

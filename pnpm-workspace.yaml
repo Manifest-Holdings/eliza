@@ -1,6 +1,7 @@
 packages:
     - "docs"
     - "packages/core"
+    - "packages/core-plugin-v1"
     - "packages/cli"
     - "packages/adapter-postgres"
     - "packages/client-auto"

@@ -235,6 +235,8 @@ export type Models = {
     [ModelProviderName.ATOMA]: Model;
     [ModelProviderName.SECRETAI]: Model;
     [ModelProviderName.NEARAI]: Model;
+    [ModelProviderName.KLUSTERAI]: Model;
+    [ModelProviderName.MEM0]: Model;
 };
 
 /**
@@ -276,6 +278,8 @@ export enum ModelProviderName {
     ATOMA = "atoma",
     SECRETAI = "secret_ai",
     NEARAI = "nearai",
+    KLUSTERAI = "kluster_ai",
+    MEM0 = "mem0",
 }
 
 /**
@@ -1208,6 +1212,7 @@ export interface IMemoryManager {
         content: string,
     ): Promise<{ embedding: number[]; levenshtein_score: number }[]>;
 
+    getMemoriesByIds(ids: UUID[]): Promise<Memory[]>;
     getMemoryById(id: UUID): Promise<Memory | null>;
     getMemoriesByRoomIds(params: {
         roomIds: UUID[];

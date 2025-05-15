@@ -1,4 +1,4 @@
-import type { IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
+import type { IAgentRuntime, Memory, Provider, State } from "@elizaos/core-plugin-v1";
 
 const boredomLevels = [
     {

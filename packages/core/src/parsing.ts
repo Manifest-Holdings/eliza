@@ -147,9 +147,10 @@ export function parseJSONObjectFromText(
 
     if (jsonBlockMatch) {
         text = cleanJsonResponse(text);
-        const parsingText = normalizeJsonString(text);
+        // see issue 3779
+        //const parsingText = normalizeJsonString(text);
         try {
-            jsonData = JSON.parse(parsingText);
+            jsonData = JSON.parse(text);
         } catch (e) {
             console.error("Error parsing JSON:", e);
             console.error("Text is not JSON", text);
@@ -161,9 +162,10 @@ export function parseJSONObjectFromText(
 
         if (objectMatch) {
             text = cleanJsonResponse(text);
-            const parsingText = normalizeJsonString(text);
+            // see issue 3779
+	    //const parsingText = normalizeJsonString(text);
             try {
-                jsonData = JSON.parse(parsingText);
+                jsonData = JSON.parse(text);
             } catch (e) {
                 console.error("Error parsing JSON:", e);
                 console.error("Text is not JSON", text);
@@ -240,7 +242,7 @@ export const normalizeJsonString = (str: string) => {
 
     // "key": unquotedValue → "key": "unquotedValue"
     str = str.replace(
-      /("[\w\d_-]+")\s*: \s*(?!"|\[)([\s\S]+?)(?=(,\s*"|\}$))/g,
+      /("[\w\d_-]+")\s*: \s*(?!"|\[|\{|null|true|false|\d+)([\s\S]+?)(?=(,\s*"|\}))/g,
       '$1: "$2"',
     );
 
@@ -251,7 +253,7 @@ export const normalizeJsonString = (str: string) => {
     );
 
     // "key": someWord → "key": "someWord"
-    str = str.replace(/("[\w\d_-]+")\s*:\s*([A-Za-z_]+)(?!["\w])/g, '$1: "$2"');
+    str = str.replace(/("[\w\d_-]+")\s*:\s*(?!null|false|true)([A-Za-z_]+)(?!["\w])/g, '$1: "$2"');
 
     // Replace adjacent quote pairs with a single double quote
     str = str.replace(/(?:"')|(?:'")/g, '"');

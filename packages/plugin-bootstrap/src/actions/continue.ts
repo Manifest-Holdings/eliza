@@ -1,6 +1,3 @@
-import { composeContext, elizaLogger } from "@elizaos/core";
-import { generateMessageResponse, generateTrueOrFalse } from "@elizaos/core";
-import { booleanFooter, messageCompletionFooter } from "@elizaos/core";
 import {
     type Action,
     type ActionExample,
@@ -10,7 +7,13 @@ import {
     type Memory,
     ModelClass,
     type State,
-} from "@elizaos/core";
+    messageCompletionFooter,
+    generateMessageResponse,
+    generateTrueOrFalse,
+    composeContext,
+    booleanFooter,
+    elizaLogger,
+} from "@elizaos/core-plugin-v1";
 
 const maxContinuesInARow = 3;
 
@@ -119,14 +122,14 @@ export const continueAction: Action = {
 
             if (continueCount >= maxContinuesInARow) {
                 elizaLogger.log(
-                    `[CONTINUE] Max continues (${maxContinuesInARow}) reached for this message chain`
+                    [`[CONTINUE] Max continues (${maxContinuesInARow}) reached for this message chain`]
                 );
                 return;
             }
 
             if (lastAgentMessage.content?.action !== "CONTINUE") {
                 elizaLogger.log(
-                    `[CONTINUE] Last message wasn't a CONTINUE, preventing double response`
+                    [`[CONTINUE] Last message wasn't a CONTINUE, preventing double response`]
                 );
                 return;
             }
@@ -142,7 +145,7 @@ export const continueAction: Action = {
             message.content.text.endsWith("!")
         ) {
             elizaLogger.log(
-                `[CONTINUE] Last message had question/exclamation. Not proceeding.`
+                [`[CONTINUE] Last message had question/exclamation. Not proceeding.`]
             );
             return;
         }
@@ -177,7 +180,7 @@ export const continueAction: Action = {
         // Use AI to determine if we should continue
         const shouldContinue = await _shouldContinue(state);
         if (!shouldContinue) {
-            elizaLogger.log("[CONTINUE] Not elaborating, returning");
+            elizaLogger.log([`[CONTINUE] Not elaborating, returning`]);
             return;
         }
 
@@ -275,7 +278,7 @@ export const continueAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "That it’s more about moments than things",
+                    text: "That it's more about moments than things",
                     action: "CONTINUE",
                 },
             },
