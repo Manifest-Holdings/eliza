@@ -476,6 +476,7 @@ export async function loadCharacters(
     return loadedCharacters;
 }
 
+/*
 async function handlePluginImporting(plugins: string[]) {
     if (plugins.length > 0) {
         elizaLogger.info("Plugins are: ", plugins);
@@ -488,6 +489,7 @@ async function handlePluginImporting(plugins: string[]) {
                             .replace("@elizaos/plugin-", "")
                             .replace(/-./g, (x) => x[1].toUpperCase()) +
                         "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+                    console.log('functionName', functionName)
                     return (
                         importedPlugin.default || importedPlugin[functionName]
                     );
@@ -505,8 +507,8 @@ async function handlePluginImporting(plugins: string[]) {
         return [];
     }
 }
+*/
 
-/*
 async function handlePluginImporting(plugins: string[]) {
     if (plugins.length > 0) {
         // this logging should happen before calling, so we can include important context
@@ -531,11 +533,10 @@ async function handlePluginImporting(plugins: string[]) {
                             functionName
                         );
                     }
-                    return {
-                        ...(importedPlugin.default ||
-                            importedPlugin[functionName]),
-                        npmName: plugin,
-                    };
+                    //console.log('functionName', functionName)
+                    return {...(
+                        importedPlugin.default || importedPlugin[functionName]
+                    ), npmName: plugin };
                 } catch (importError) {
                     console.error(
                         `Failed to import plugin: ${plugin}`,
@@ -551,7 +552,6 @@ async function handlePluginImporting(plugins: string[]) {
         return [];
     }
 }
-*/
 
 export function getTokenForProvider(
     provider: ModelProviderName,
