@@ -19,6 +19,7 @@
         "dist"
     ],
     "dependencies": {
+        "@elizaos/core": "workspace:*",
         "@tavily/core": "^0.0.2",
         "tsup": "8.3.5",
         "js-tiktoken": "1.0.15"

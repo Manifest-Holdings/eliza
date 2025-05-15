@@ -825,6 +825,9 @@ importers:
 
   packages/plugin-web-search:
     dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
       '@tavily/core':
         specifier: ^0.0.2
         version: 0.0.2

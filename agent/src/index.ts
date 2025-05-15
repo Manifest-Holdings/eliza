@@ -534,6 +534,7 @@ async function handlePluginImporting(plugins: string[]) {
                         );
                     }
                     //console.log('functionName', functionName)
+                    console.log('functionName', functionName)
                     return {...(
                         importedPlugin.default || importedPlugin[functionName]
                     ), npmName: plugin };
@@ -872,6 +873,7 @@ async function findDatabaseAdapter(runtime: AgentRuntime) {
     let adapter: Adapter | undefined;
     // if not found, default to sqlite
     if (adapters.length === 0) {
+        //const sqliteAdapterPlugin = await import('@elizaos-plugins/adapter-sqlite');
         const sqliteAdapterPlugin = await import(
             "@elizaos/adapter-postgres"
         );

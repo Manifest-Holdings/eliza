@@ -76,7 +76,7 @@ async function set(
     }
 
     const zv = getEmbeddingZeroVector()
-    console.log('knowledge::set', zv.length)
+    //console.log('knowledge::set', zv.length)
     await runtime.documentsManager.createMemory({
         id: item.id,
         agentId: runtime.agentId,
@@ -96,7 +96,7 @@ async function set(
     // If text is shorter than chunk size, don't split it
     if (preprocessed.length <= chunkSize) {
         const embedding = await embed(runtime, preprocessed);
-        console.log('knowledge::set - got embed', embedding.length, 'pplen', preprocessed.length)
+        //console.log('knowledge::set - got embed', embedding.length, 'pplen', preprocessed.length)
         await runtime.knowledgeManager.createMemory({
             id: stringToUuid(item.id + preprocessed),
             roomId: runtime.agentId,
