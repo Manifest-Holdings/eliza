@@ -6,7 +6,7 @@
 
 # dev branch
 
-<img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
+<img src="static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
 
 _Wie gesehen bei [@DegenSpartanAI](https://x.com/degenspartanai) und [@MarcAIndreessen](https://x.com/pmairca)_
 

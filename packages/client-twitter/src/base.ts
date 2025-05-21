@@ -32,6 +32,11 @@ type TwitterProfile = {
     screenName: string;
     bio: string;
     nicknames: string[];
+    followerCount?: number;
+    followingCount?: number;
+    tweetCount?: number;
+    location?: string;
+    website?: string;
 };
 
 class RequestQueue {
@@ -898,6 +903,11 @@ export class ClientBase extends EventEmitter {
                               : "",
                     nicknames:
                         this.runtime.character.twitterProfile?.nicknames || [],
+                    followerCount: profile.followersCount,
+                    followingCount: profile.followingCount,
+                    tweetCount: profile.tweetsCount,
+                    location: profile.location,
+                    website: profile.website,
                 } satisfies TwitterProfile;
             });
 
@@ -905,6 +915,30 @@ export class ClientBase extends EventEmitter {
         } catch (error) {
             console.error("Error fetching Twitter profile:", error);
             //throw error;
+        }
+    }
+
+    async fetchUserProfile(userId: string): Promise<TwitterProfile> {
+        try {
+            const profile = await this.requestQueue.add(async () => {
+                const profile = await this.twitterClient.getProfile(userId);
+                return {
+                    id: profile.userId,
+                    username: profile.username,
+                    screenName: profile.name,
+                    bio: profile.biography || "",
+                    followerCount: profile.followersCount,
+                    followingCount: profile.followingCount,
+                    tweetCount: profile.tweetsCount,
+                    location: profile.location,
+                    website: profile.website,
+                    nicknames: []
+                } satisfies TwitterProfile;
+            });
+            return profile;
+        } catch (error) {
+            console.error("Error fetching Twitter user profile:", error);
+            throw error;
         }
     }
 }

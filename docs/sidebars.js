@@ -20,7 +20,55 @@ const sidebars = {
                     id: "faq",
                     label: "❓ FAQ",
                 },
-            ],
+		{
+		    type: "category",
+		    label: "Tutorials",
+                    items: [
+                        {
+                            type: "category",
+                            label: "AI Agent Dev School",
+                            link: { 
+                              type: 'doc', 
+                              id: 'tutorials/devschool/index' 
+                            },
+                            collapsed: false,
+                            items: [
+                                {
+                                    type: "doc",
+                                    id: "tutorials/devschool/part1",
+                                    label: "Part 1",
+                                },
+                                {
+                                    type: "doc",
+                                    id: "tutorials/devschool/part2",
+                                    label: "Part 2",
+                                },
+                                {
+                                    type: "doc",
+                                    id: "tutorials/devschool/part3",
+                                    label: "Part 3",
+                                },
+                            ],
+                        },
+                        {
+                            type: "doc",
+                            id: "tutorials/nader_tutorial_10min",
+                            label: "Clone Yourself in 10min",
+                        },
+                        {
+                            type: "doc",
+                            id: "tutorials/nader_tutorial_15min",
+                            label: "Build Social Agents in 15min",
+                        },                        
+                        {
+                            type: "doc",
+                            id: "tutorials/nader_tutorial_35min",
+                            label: "Build a Plugin in 35min",
+                        },                        
+                    ],
+                    collapsed: true, // Expand by default
+                },
+			],
             collapsed: false,
         },
         {
@@ -30,18 +78,38 @@ const sidebars = {
             items: [
                 {
                     type: "doc",
+                    id: "core/overview",
+                    label: "Overview",
+                },
+                {
+                    type: "doc",
                     id: "core/characterfile",
                     label: "Character Files",
                 },
                 {
                     type: "doc",
+                    id: "core/clients",
+                    label: "Clients",
+                },
+                {
+                    type: "doc",
                     id: "core/agents",
-                    label: "Agents",
+                    label: "Agent Runtime",
+                },
+                {
+                    type: "doc",
+                    id: "core/plugins",
+                    label: "Plugins",
                 },
                 {
                     type: "doc",
                     id: "core/providers",
                     label: "Providers",
+                },
+                {
+                    type: "doc",
+                    id: "core/knowledge",
+                    label: "RAG Knowledge",
                 },
                 {
                     type: "doc",
@@ -52,6 +120,11 @@ const sidebars = {
                     type: "doc",
                     id: "core/evaluators",
                     label: "Evaluators",
+                },
+                {
+                    type: "doc",
+                    id: "core/database",
+                    label: "Database Adapters",
                 },
             ],
         },
@@ -67,8 +140,13 @@ const sidebars = {
                 },
                 {
                     type: "doc",
-                    id: "guides/advanced",
-                    label: "Advanced Usage",
+                    id: "guides/remote-deployment",
+                    label: "Deployment",
+                },
+                {
+                    type: "doc",
+                    id: "guides/fine-tuning",
+                    label: "Fine Tuning",
                 },
                 {
                     type: "doc",
@@ -77,8 +155,8 @@ const sidebars = {
                 },
                 {
                     type: "doc",
-                    id: "guides/local-development",
-                    label: "Local Development",
+                    id: "guides/memory-management",
+                    label: "Memory Management",
                 },
                 {
                     type: "doc",
@@ -92,16 +170,6 @@ const sidebars = {
             label: "🎓 Advanced Topics",
             collapsed: false,
             items: [
-                {
-                    type: "doc",
-                    id: "advanced/fine-tuning",
-                    label: "Fine-tuning",
-                },
-                {
-                    type: "doc",
-                    id: "advanced/infrastructure",
-                    label: "Infrastructure",
-                },
                 {
                     type: "doc",
                     id: "advanced/trust-engine",
@@ -125,41 +193,14 @@ const sidebars = {
             ],
         },
         {
-            type: "category",
-            label: "📦 Packages",
-            collapsed: false,
-            items: [
-                {
-                    type: "doc",
-                    id: "packages/packages",
-                    label: "Overview",
-                },
-                {
-                    type: "doc",
-                    id: "packages/core",
-                    label: "Core Package",
-                },
-                {
-                    type: "doc",
-                    id: "packages/adapters",
-                    label: "Database Adapters",
-                },
-                {
-                    type: "doc",
-                    id: "packages/clients",
-                    label: "Client Packages",
-                },
-                {
-                    type: "doc",
-                    id: "packages/agent",
-                    label: "Agent Package",
-                },
-                {
-                    type: "doc",
-                    id: "packages/plugins",
-                    label: "Plugin System",
-                },
-            ],
+            type: "doc",
+            id: "awesome-eliza",
+            label: "Awesome elizaOS",
+        },
+        {
+            type: "doc",
+            id: "changelog",
+            label: "CHANGELOG",
         },
     ],
 };

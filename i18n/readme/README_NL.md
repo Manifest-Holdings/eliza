@@ -1,7 +1,7 @@
 # Eliza 🤖
 
 <div align="center">
-  <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
+  <img src="/docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
 </div>
 
 <div align="center">
@@ -17,7 +17,7 @@
 ## 🚩 Overzicht
 
 <div align="center">
-  <img src="./docs/static/img/eliza_diagram.jpg" alt="Eliza Diagram" width="100%" />
+  <img src="/docs/static/img/eliza_diagram.jpg" alt="Eliza Diagram" width="100%" />
 </div>
 
 ## ✨ Functies
@@ -80,7 +80,7 @@ Open een nieuwe terminal in dezelfde map en voer onderstaand commando uit. Volg 
 pnpm start:client
 ```
 
-Lees vervolgens de [Documentatie](https://elizaos.github.io/eliza/) om te leren hoe je je Eliza kunt aanpassen.
+Lees vervolgens de [Documentatie](https://elizaos.github.io/eliza/) om te leren hoe je Eliza kunt aanpassen.
 
 ### Eliza Handmatig Starten (Alleen aanbevolen als je weet wat je doet)
 

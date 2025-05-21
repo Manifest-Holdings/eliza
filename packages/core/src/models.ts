@@ -88,7 +88,7 @@ export const models: Models = {
         },
     },
     [ModelProviderName.ANTHROPIC]: {
-        endpoint: "https://api.anthropic.com/v1",
+        endpoint: settings.ANTHROPIC_API_URL || "https://api.anthropic.com/v1",
         model: {
             [ModelClass.SMALL]: {
                 name:
@@ -126,7 +126,7 @@ export const models: Models = {
         },
     },
     [ModelProviderName.CLAUDE_VERTEX]: {
-        endpoint: "https://api.anthropic.com/v1", // TODO: check
+        endpoint: settings.ANTHROPIC_API_URL || "https://api.anthropic.com/v1", // TODO: check
         model: {
             [ModelClass.SMALL]: {
                 name: "claude-3-5-sonnet-20241022",
@@ -1149,6 +1149,128 @@ export const models: Models = {
                 maxOutputTokens: 8192,
                 temperature: 0.7,
             },
+        },
+    },
+    [ModelProviderName.SECRETAI]: {
+        endpoint: settings.SECRET_AI_URL || "https://ai1.scrtlabs.com:21434",
+        model: {
+            [ModelClass.SMALL]: {
+                name:
+                    settings.SMALL_SECRET_AI_MODEL ||
+                    "deepseek-r1:70b",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.7,
+            },
+            [ModelClass.MEDIUM]: {
+                name:
+                    settings.MEDIUM_SECRET_AI_MODEL ||
+                    "deepseek-r1:70b",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.7,
+            },
+            [ModelClass.LARGE]: {
+                name:
+                    settings.LARGE_SECRET_AI_MODEL ||
+                    "deepseek-r1:70b",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.7,
+            },
+        },
+    },
+    [ModelProviderName.MEM0]: {
+        endpoint: settings.MEM0_API_URL || "https://api.openai.com/v1",
+        model: {
+            [ModelClass.SMALL]: {
+                name: settings.SMALL_MEM0_MODEL || "gpt-4o-mini",
+                stop: [],   
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.MEDIUM]: {
+                name: settings.MEDIUM_MEM0_MODEL || "gpt-4o",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.LARGE]: {
+                name: settings.LARGE_MEM0_MODEL || "gpt-4o",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+        },
+    },
+    [ModelProviderName.NEARAI]: {
+        endpoint: settings.NEARAI_API_URL || "https://api.near.ai/v1",
+        model: {
+            [ModelClass.SMALL]: {
+                name:
+                    settings.SMALL_NEARAI_MODEL ||
+                    settings.NEARAI_MODEL ||
+                    "fireworks::accounts/fireworks/models/llama-v3p2-3b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.MEDIUM]: {
+                name:
+                    settings.MEDIUM_NEARAI_MODEL ||
+                    settings.NEARAI_MODEL ||
+                    "fireworks::accounts/fireworks/models/llama-v3p1-70b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.LARGE]: {
+                name:
+                    settings.LARGE_NEARAI_MODEL ||
+                    settings.NEARAI_MODEL ||
+                    "fireworks::accounts/fireworks/models/llama-v3p1-405b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.IMAGE]: {
+                name: settings.IMAGE_NEARAI_MODEL || "fireworks::accounts/fireworks/models/playground-v2-5-1024px-aesthetic",
+            },
+        },
+    },
+    [ModelProviderName.KLUSTERAI]: {
+        endpoint: "https://api.kluster.ai/v1",
+        model: {
+            [ModelClass.SMALL]: {
+                name: settings.SMALL_KLUSTERAI_MODEL || "klusterai/Meta-Llama-3.1-8B-Instruct-Turbo",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.MEDIUM]: {
+                name: settings.MEDIUM_KLUSTERAI_MODEL || "klusterai/Meta-Llama-3.3-70B-Instruct-Turbo",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.LARGE]: {
+                name: settings.LARGE_KLUSTERAI_MODEL || "klusterai/Meta-Llama-3.1-405B-Instruct-Turbo",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            }
         },
     },
 };

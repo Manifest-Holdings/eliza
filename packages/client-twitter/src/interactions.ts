@@ -41,6 +41,16 @@ Recent interactions between {{agentName}} and other users:
 
 {{recentPosts}}
 
+# About Tweet Author:
+{{#tweetAuthor}}
+Bio: {{bio}}
+Followers: {{followerCount}}
+Following: {{followingCount}}
+Total Tweets: {{tweetCount}}
+Location: {{location}}
+Website: {{website}}
+{{/tweetAuthor}}
+
 # TASK: Generate a post/reply in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}) while using the thread of tweets as additional context:
 
 Current Post:
@@ -340,11 +350,16 @@ export class TwitterInteractionClient {
             return { text: "", action: "IGNORE" };
         }
 
+        if (!message.content.text) {
+            elizaLogger.log("Skipping Tweet with no text", tweet.id);
+            return { text: "", action: "IGNORE" };
+        }
+
         elizaLogger.log("Processing Tweet: ", tweet.id);
         const formatTweet = (tweet: Tweet) => {
             return `  ID: ${tweet.id}
-  From: ${tweet.name} (@${tweet.username})
-  Text: ${tweet.text}`;
+From: ${tweet.name} (@${tweet.username})
+Text: ${tweet.text}`;
         };
         const currentPost = formatTweet(tweet);
 
@@ -373,18 +388,24 @@ export class TwitterInteractionClient {
                 imageDescriptionsArray.push(description);
             }
         } catch (error) {
-    // Handle the error
-    elizaLogger.error("Error Occured during describing image: ", error);
-}
+            elizaLogger.error("Error Occurred during describing image: ", error);
+        }
 
-
-
+        // Fetch user profile data
+        let tweetAuthor = null;
+        try {
+            tweetAuthor = await this.client.fetchUserProfile(tweet.userId);
+            elizaLogger.debug("Fetched tweet author profile:", tweetAuthor);
+        } catch (error) {
+            elizaLogger.error("Error fetching tweet author profile:", error);
+        }
 
         let state = await this.runtime.composeState(message, {
             twitterClient: this.client.twitterClient,
             twitterUserName: this.client.twitterConfig.TWITTER_USERNAME,
             currentPost,
             formattedConversation,
+            tweetAuthor,
             imageDescriptions: imageDescriptionsArray.length > 0
             ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
               `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}`:""

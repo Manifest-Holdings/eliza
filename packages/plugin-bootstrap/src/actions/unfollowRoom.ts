@@ -1,14 +1,14 @@
-import { composeContext } from "@elizaos/core";
-import { generateTrueOrFalse } from "@elizaos/core";
-import { booleanFooter } from "@elizaos/core";
 import {
     type Action,
     type ActionExample,
     type IAgentRuntime,
     type Memory,
     ModelClass,
+    booleanFooter,
+    generateTrueOrFalse,
+    composeContext,
     type State,
-} from "@elizaos/core";
+} from "@elizaos/core-plugin-v1";
 
 const shouldUnfollowTemplate =
     `Based on the conversation so far:

@@ -1,5 +1,5 @@
 import { elizaLogger, IAgentRuntime, generateObject, ModelClass } from "@elizaos/core";
-import { GeneratedEmailContent, EmailGenerationOptions } from "../types";
+import type { EmailBlock, GeneratedEmailContent, EmailGenerationOptions } from "../types";
 import { EmailGenerationSchema, EmailPromptSchema } from "../schemas/emailGenerationSchema";
 
 export class EmailGenerationService {
@@ -30,17 +30,29 @@ export class EmailGenerationService {
             const emailContent = EmailGenerationSchema.parse(object);
             elizaLogger.debug("Generated content validated successfully");
 
-            const blocks = emailContent.parameters.blocks.map(block => ({
-                ...block,
+            const blocks: EmailBlock[] = emailContent.parameters.blocks.map(block => ({
+                //...block,
+                type: block.type,
+                content: block.content,
                 metadata: {
-                    ...block.metadata,
+                    // emailblock metadata is different
+                    //...block.metadata,
+                    style: block.metadata.style,
+                    className: block.metadata.className,
+                    importance: block.metadata.importance,
                 }
             }));
 
             return {
                 subject: emailContent.parameters.subject,
                 blocks: blocks,
-                metadata: emailContent.parameters.metadata
+                metadata: {
+                  //emailContent.parameters.metadata
+                  tone:     emailContent.parameters.metadata.tone,
+                  intent:   emailContent.parameters.metadata.intent,
+                  priority: emailContent.parameters.metadata.priority,
+                  language: emailContent.parameters.metadata.language,
+                }
             };
 
         } catch (error) {

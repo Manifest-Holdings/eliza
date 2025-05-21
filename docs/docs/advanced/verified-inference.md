@@ -8,7 +8,7 @@ sidebar_position: 18
 
 With verified inference, you can turn your Eliza agent fully verifiable on-chain on Solana with an OpenAI-compatible TEE API. This proves that your agent’s thoughts and outputs are free from human control thus increasing the trust of the agent. 
 
-Compared to [fully deploying the agent in a TEE](https://elizaos.github.io/eliza/docs/advanced/eliza-in-tee/), this is a more light-weight solution which only verifies the inference calls and only needs a single line of code change. 
+Compared to [fully deploying the agent in a TEE](https://eliza.how/docs/0.25.9/advanced/eliza-in-tee), this is a more light-weight solution which only verifies the inference calls and only needs a single line of code change. 
 
 The API supports all OpenAI models out of the box, including your fine-tuned models. The following guide will walk you through how to use verified inference API with Eliza. 
 
