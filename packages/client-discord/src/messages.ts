@@ -545,7 +545,7 @@ export class MessageManager {
                     ServiceType.SPEECH_GENERATION
                 );
                 if (!speechService) {
-                    throw new Error("Speech generation service not found");
+                    //throw new Error("Speech generation service not found");
                 }
 
                 const audioStream = await speechService.generate(
@@ -878,7 +878,7 @@ export class MessageManager {
                     ServiceType.VIDEO
                 );
                 if (!videoService) {
-                    throw new Error("Video service not found");
+                    //throw new Error("Video service not found");
                 }
                 const videoInfo = await videoService.processVideo(
                     url,
@@ -898,7 +898,7 @@ export class MessageManager {
                     ServiceType.BROWSER
                 );
                 if (!browserService) {
-                    throw new Error("Browser service not found");
+                    //throw new Error("Browser service not found");
                 }
 
                 const { title, description: summary } =
