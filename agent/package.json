@@ -20,6 +20,9 @@
     "dependencies": {
         "@elizaos/adapter-postgres": "workspace:*",
         "@elizaos/client-direct": "workspace:*",
+        "@elizaos/client-twitter": "workspace:*",
+        "@elizaos-plugins/client-telegram": "workspace:*",
+        "@elizaos-plugins/client-discord": "workspace:*",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-bootstrap": "workspace:*",
         "@types/node": "^22.13.5",
