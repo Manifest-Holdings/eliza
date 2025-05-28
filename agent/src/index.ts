@@ -175,7 +175,15 @@ async function loadCharactersFromUrl(url: string): Promise<Character[]> {
       knockknock: 'whosthere?m33333',
     }
   });
-  const responseJson = await response.json();
+
+  let responseJson = {}
+  try {
+    responseJson = await response.json();
+  } catch (e) {
+    console.error('cant parse response', response)
+    // needs to crash out to retry
+    throw (e)
+  }
 
   let characters: Character[] = [];
   if (Array.isArray(responseJson)) {
@@ -185,6 +193,10 @@ async function loadCharactersFromUrl(url: string): Promise<Character[]> {
           try {
             return await jsonToCharacter(url, character)
           } catch (e) {
+            // way too noisy
+            if (character.modelProvider) {
+              //console.log('Error loading character(s) from', url, e, character)
+            }
             elizaLogger.error(`Error loading character(s) from ${url}: ${e}`);
             //process.exit(1);
             return false
@@ -255,6 +267,37 @@ async function jsonToCharacter(
 ): Promise<Character> {
     patchupCharacter(character);
     validateCharacterConfig(character);
+
+    // 250521 manifast hack
+    // migrate clients => plugins
+    if (character?.clients) {
+      //console.log('character.clients', character.clients)
+
+      if (character.clients.indexOf('discord') !== -1) {
+        const hasPlugin = character?.plugins.includes('discord')
+        //console.log('hasDiscordAlready', hasPlugin)
+        if (!hasPlugin) {
+          console.log('Discord not in plugins', character.plugins, 'adding')
+          character.plugins.push('@elizaos-plugins/client-discord')
+        }
+      }
+      if (character.clients.indexOf('telegram') !== -1) {
+        const hasPlugin = character?.plugins.includes('telegram')
+        //console.log('hasTelegramAlready', hasPlugin)
+        if (!hasPlugin) {
+          console.log('Telegram not in plugins', character.plugins, 'adding')
+          character.plugins.push('@elizaos-plugins/client-telegram')
+        }
+      }
+      if (character.clients.indexOf('twitter') !== -1) {
+        const hasPlugin = character?.plugins.includes('twitter')
+        //console.log('hasTwitterAlready', hasPlugin)
+        if (!hasPlugin) {
+          console.log('Twitter not in plugins', character.plugins, 'adding')
+          character.plugins.push('@elizaos/client-twitter')
+        }
+      }
+    }
 
     // .id isn't really valid
     const characterId = character.id || character.name;
@@ -533,8 +576,8 @@ async function handlePluginImporting(plugins: string[]) {
                             functionName
                         );
                     }
+                    // imageGenerationPlugin, videoGenerationPlugin, webSearchPlugin
                     //console.log('functionName', functionName)
-                    console.log('functionName', functionName)
                     return {...(
                         importedPlugin.default || importedPlugin[functionName]
                     ), npmName: plugin };
@@ -758,7 +801,8 @@ export async function initializeClients(
 ) {
     // each client can only register once
     // and if we want two we can explicitly support it
-    const clients: ClientInstance[] = [];
+    //const clients: ClientInstance[] = [];
+    const clients = {}
     // const clientTypes = clients.map((c) => c.name);
     // elizaLogger.log("initializeClients", clientTypes, "for", character.name);
 
@@ -768,7 +812,8 @@ export async function initializeClients(
                 for (const client of plugin.clients) {
                     const startedClient = await client.start(runtime);
                     elizaLogger.debug(`Initializing client: ${client.name}`);
-                    clients.push(startedClient);
+                    // was startedClient
+                    clients[client.name] = startedClient
                 }
             }
         }
@@ -901,6 +946,11 @@ async function startAgent(
 ): Promise<AgentRuntime> {
     let db: IDatabaseAdapter & IDatabaseCacheAdapter;
     try {
+        if (!character) {
+          console.trace()
+          console.error('Skipping empty character', character)
+          return
+        }
         character.id ??= stringToUuid(character.name);
         character.username ??= character.name;
 
@@ -985,22 +1035,26 @@ const handlePostCharacterLoaded = async (
     character: Character
 ): Promise<Character> => {
     let processedCharacter = character;
-    // Filtering the plugins with the method of handlePostCharacterLoaded
-    const processors = character?.postProcessors?.filter(
-        (p) => typeof p.handlePostCharacterLoaded === "function"
-    );
-    if (processors?.length > 0) {
-        processedCharacter = Object.assign({}, character, {
-            postProcessors: undefined,
-        });
-        // process the character with each processor
-        // the order is important, so we loop through the processors
-        for (let i = 0; i < processors.length; i++) {
-            const processor = processors[i];
-            processedCharacter = await processor.handlePostCharacterLoaded(
-                processedCharacter
-            );
-        }
+    try {
+      // Filtering the plugins with the method of handlePostCharacterLoaded
+      const processors = character?.postProcessors?.filter(
+          (p) => typeof p.handlePostCharacterLoaded === "function"
+      );
+      if (processors?.length > 0) {
+          processedCharacter = Object.assign({}, character, {
+              postProcessors: undefined,
+          });
+          // process the character with each processor
+          // the order is important, so we loop through the processors
+          for (let i = 0; i < processors.length; i++) {
+              const processor = processors[i];
+              processedCharacter = await processor.handlePostCharacterLoaded(
+                  processedCharacter
+              );
+          }
+      }
+    } catch (e) {
+      console.error('handlePostCharacterLoaded err', e)
     }
     return processedCharacter;
 };
@@ -1034,7 +1088,11 @@ const startAgents = async () => {
         const processedCharacter = await handlePostCharacterLoaded(
             character
         );
-        await startAgent(processedCharacter, directClient);
+        if (processedCharacter) {
+          await startAgent(processedCharacter, directClient);
+        } else {
+          console.warn('Character failed to handlePostCharacterLoaded', character, 'output', processedCharacter)
+        }
       } catch (error) {
         console.error("Error starting agent:", character.name, error);
       }
