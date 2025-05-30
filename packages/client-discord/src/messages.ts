@@ -544,15 +544,13 @@ export class MessageManager {
                 const speechService = this.runtime.getService<ISpeechService>(
                     ServiceType.SPEECH_GENERATION
                 );
-                if (!speechService) {
-                    throw new Error("Speech generation service not found");
+                if (speechService) {
+                  const audioStream = await speechService.generate(
+                      this.runtime,
+                      errorMessage
+                  );
+                  await this.voiceManager.playAudioStream(userId, audioStream);
                 }
-
-                const audioStream = await speechService.generate(
-                    this.runtime,
-                    errorMessage
-                );
-                await this.voiceManager.playAudioStream(userId, audioStream);
             } else {
                 // For text channels, send the error message
                 console.error("Error sending message:", error);
@@ -877,41 +875,39 @@ export class MessageManager {
                 const videoService = this.runtime.getService<IVideoService>(
                     ServiceType.VIDEO
                 );
-                if (!videoService) {
-                    throw new Error("Video service not found");
-                }
-                const videoInfo = await videoService.processVideo(
-                    url,
-                    this.runtime
-                );
 
-                attachments.push({
-                    id: `youtube-${Date.now()}`,
-                    url: url,
-                    title: videoInfo.title,
-                    source: "YouTube",
-                    description: videoInfo.description,
-                    text: videoInfo.text,
-                });
+                if (videoService) {
+                  const videoInfo = await videoService.processVideo(
+                      url,
+                      this.runtime
+                  );
+
+                  attachments.push({
+                      id: `youtube-${Date.now()}`,
+                      url: url,
+                      title: videoInfo.title,
+                      source: "YouTube",
+                      description: videoInfo.description,
+                      text: videoInfo.text,
+                  });
+                }
             } else {
                 const browserService = this.runtime.getService<IBrowserService>(
                     ServiceType.BROWSER
                 );
-                if (!browserService) {
-                    throw new Error("Browser service not found");
+                if (browserService) {
+                  const { title, description: summary } =
+                      await browserService.getPageContent(url, this.runtime);
+
+                  attachments.push({
+                      id: `webpage-${Date.now()}`,
+                      url: url,
+                      title: title || "Web Page",
+                      source: "Web",
+                      description: summary,
+                      text: summary,
+                  });
                 }
-
-                const { title, description: summary } =
-                    await browserService.getPageContent(url, this.runtime);
-
-                attachments.push({
-                    id: `webpage-${Date.now()}`,
-                    url: url,
-                    title: title || "Web Page",
-                    source: "Web",
-                    description: summary,
-                    text: summary,
-                });
             }
         }
 

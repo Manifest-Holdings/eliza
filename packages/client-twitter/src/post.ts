@@ -814,7 +814,7 @@ export class TwitterPostClient {
                             userId: this.runtime.agentId,
                             roomId,
                             agentId: this.runtime.agentId,
-                            content: { text: "", action: "" },
+                            content: { text: tweet.text, action: "" },
                         },
                         {
                             twitterUserName: this.twitterUsername,

@@ -18,7 +18,17 @@ const factsProvider: Provider = {
             actors: state?.actorsData,
         });
 
+        if (recentMessages === "") {
+          console.log('factsProvider empty recentMessages for', recentMessagesData)
+          return "";
+        }
+
         const embedding = await embed(runtime, recentMessages);
+        //console.log('factsProvider embedding', embedding.length)
+        if (!embedding.length) {
+          console.log('factsProvider empty embedding for', recentMessages)
+          return "";
+        }
 
         const memoryManager = new MemoryManager({
             runtime,

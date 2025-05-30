@@ -45,4 +45,14 @@ export const TelegramClientInterface: Client = {
           return { success: false, message: error.message };
       }
     },
+    stop: async (runtime: IAgentRuntime) => {
+        try {
+            // stop it
+            elizaLogger.log("Stopping telegram client", runtime.agentId);
+            await runtime.clients.telegram.stop();
+        } catch (e) {
+            elizaLogger.error("client-telegram interface stop error", e);
+        }
+    },
+
 };

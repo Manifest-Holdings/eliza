@@ -264,15 +264,8 @@ export class VoiceManager extends EventEmitter {
                         elizaLogger.log(
                             "Disconnection confirmed - cleaning up..." + e
                         );
-                        try {
-                          connection.destroy();
-                          this.connections.delete(channel.id);
-                        } catch (e2) {
-                            // Seems to be a real disconnect, destroy and cleanup
-                            elizaLogger.log(
-                                "Clean up failed - already closed...", e2
-                            );
-                        }
+                        connection.destroy();
+                        this.connections.delete(channel.id);
                     }
                 } else if (
                     newState.status === VoiceConnectionStatus.Destroyed
@@ -333,13 +326,9 @@ export class VoiceManager extends EventEmitter {
             });
         } catch (error) {
             elizaLogger.log("Failed to establish voice connection:", error);
-            try {
-              connection.destroy();
-              this.connections.delete(channel.id);
-            } catch (e) {
-              elizaLogger.log("error cleaning up connect:", e);
-            }
-            //throw error;
+            connection.destroy();
+            this.connections.delete(channel.id);
+            throw error;
         }
     }
 
@@ -450,12 +439,8 @@ export class VoiceManager extends EventEmitter {
     leaveChannel(channel: BaseGuildVoiceChannel) {
         const connection = this.connections.get(channel.id);
         if (connection) {
-            try {
-              connection.destroy();
-              this.connections.delete(channel.id);
-            } catch(e) {
-              elizaLogger.log("Failed to destroy voice connection:", error);
-            }
+            connection.destroy();
+            this.connections.delete(channel.id);
         }
 
         // Stop monitoring all members in this channel
@@ -890,7 +875,7 @@ export class VoiceManager extends EventEmitter {
         const response = await generateMessageResponse({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
         });
 
         response.source = "discord";
@@ -1102,13 +1087,8 @@ export class VoiceManager extends EventEmitter {
         const connection = this.getVoiceConnection(interaction.guildId as any);
 
         if (!connection) {
-            try {
-                await interaction.reply("Not currently in a voice channel.");
-                return;
-            } catch (e) {
-                console.error('client-discord:handleLeaveChannelCommand', e)
-                return;
-            }
+            await interaction.reply("Not currently in a voice channel.");
+            return;
         }
 
         try {

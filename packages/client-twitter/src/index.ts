@@ -60,8 +60,9 @@ class TwitterManager {
 }
 
 export const TwitterClientInterface: Client = {
+    name: 'twitter',
     runtime: false,
-    name: 'Twitter',
+    //name: 'Twitter',
     async start(runtime: IAgentRuntime) {
         let twitterConfig: TwitterConfig;
         try {
@@ -187,4 +188,9 @@ export const TwitterClientInterface: Client = {
     */
 };
 
-export default TwitterClientInterface;
+const twitterPlugin = {
+  name: "twitter",
+  description: "Twitter client plugin",
+  clients: [TwitterClientInterface],
+};
+export default twitterPlugin;

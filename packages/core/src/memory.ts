@@ -150,6 +150,12 @@ export class MemoryManager implements IMemoryManager {
             unique,
         } = opts;
 
+        //console.log('searchMemoriesByEmbedding embedding', embedding.length)
+        if (!embedding.length) {
+          console.trace('searchMemoriesByEmbedding mt embed');
+          return []
+        }
+
         const result = await this.runtime.databaseAdapter.searchMemories({
             tableName: this.tableName,
             roomId,
