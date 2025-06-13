@@ -259,6 +259,40 @@ function patchupCharacter(character) {
   if (character.settings?.secrets?.TWITTER_SPACES_ENABLE !== undefined && typeof character.settings.secrets.TWITTER_SPACES_ENABLE === 'boolean') {
     character.settings.secrets.TWITTER_SPACES_ENABLE = "" + character.settings.secrets.TWITTER_SPACES_ENABLE
   }
+
+  // 250521 manifast hack
+  // migrate clients => plugins
+  if (character?.clients) {
+    console.log('character.clients', character.clients)
+
+    if (character.clients.indexOf('discord') !== -1) {
+      const hasPlugin = character?.plugins.includes('discord')
+      //console.log('hasDiscordAlready', hasPlugin)
+      if (!hasPlugin) {
+        console.log('Discord not in plugins', character.plugins, 'adding')
+        character.plugins.push('@elizaos-plugins/client-discord')
+      }
+    }
+    if (character.clients.indexOf('telegram') !== -1) {
+      const hasPlugin = character?.plugins.includes('telegram')
+      console.log('hasTelegramAlready', hasPlugin)
+      if (!hasPlugin) {
+        console.log('Telegram not in plugins', character.plugins, 'adding')
+        character.plugins.push('@elizaos-plugins/client-telegram')
+      }
+    }
+    if (character.clients.indexOf('twitter') !== -1) {
+      const hasPlugin = character?.plugins.includes('twitter')
+      //console.log('hasTwitterAlready', hasPlugin)
+      if (!hasPlugin) {
+        console.log('Twitter not in plugins', character.plugins, 'adding')
+        character.plugins.push('@elizaos/client-twitter')
+      }
+    }
+    console.log('client final plugins', character.plugins)
+  } else {
+    console.warn(character.name, 'no clients given')
+  }
 }
 
 async function jsonToCharacter(
@@ -268,37 +302,8 @@ async function jsonToCharacter(
     patchupCharacter(character);
     validateCharacterConfig(character);
 
-    // 250521 manifast hack
-    // migrate clients => plugins
-    if (character?.clients) {
-      //console.log('character.clients', character.clients)
-
-      if (character.clients.indexOf('discord') !== -1) {
-        const hasPlugin = character?.plugins.includes('discord')
-        //console.log('hasDiscordAlready', hasPlugin)
-        if (!hasPlugin) {
-          console.log('Discord not in plugins', character.plugins, 'adding')
-          character.plugins.push('@elizaos-plugins/client-discord')
-        }
-      }
-      if (character.clients.indexOf('telegram') !== -1) {
-        const hasPlugin = character?.plugins.includes('telegram')
-        //console.log('hasTelegramAlready', hasPlugin)
-        if (!hasPlugin) {
-          console.log('Telegram not in plugins', character.plugins, 'adding')
-          character.plugins.push('@elizaos-plugins/client-telegram')
-        }
-      }
-      if (character.clients.indexOf('twitter') !== -1) {
-        const hasPlugin = character?.plugins.includes('twitter')
-        //console.log('hasTwitterAlready', hasPlugin)
-        if (!hasPlugin) {
-          console.log('Twitter not in plugins', character.plugins, 'adding')
-          character.plugins.push('@elizaos/client-twitter')
-        }
-      }
-    }
-
+    // not applicable to mee.fun
+    /*
     // .id isn't really valid
     const characterId = character.id || character.name;
     const characterPrefix = `CHARACTER.${characterId
@@ -310,17 +315,20 @@ async function jsonToCharacter(
             const settingKey = key.slice(characterPrefix.length);
             return { ...settings, [settingKey]: value };
         }, {});
-    if (Object.keys(characterSettings).length > 0) {
+    console.log('characterSettings', characterSettings)
+    if (Object.keys(characterSettings)?.length > 0) {
         character.settings = character.settings || {};
         character.settings.secrets = {
             ...characterSettings,
             ...character.settings.secrets,
         };
     }
+    */
+
     // Handle plugins
     elizaLogger.debug(
         `Constructing plugins for ${character.name} character ` +
-        `(count=${character.plugins.length})`,
+        `(count=${character?.plugins?.length})`,
     );
     character.plugins = await handlePluginImporting(character.plugins);
     elizaLogger.info(
@@ -558,6 +566,7 @@ async function handlePluginImporting(plugins: string[]) {
         //elizaLogger.info("Plugins are: ", plugins);
         const importedPlugins = await Promise.all(
             plugins.map(async (plugin) => {
+                //console.log('loading', plugin)
                 try {
                     const importedPlugin: Plugin = await import(plugin);
                     const functionName =
