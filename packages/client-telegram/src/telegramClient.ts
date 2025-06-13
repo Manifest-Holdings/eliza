@@ -232,9 +232,14 @@ export class TelegramClient {
         elizaLogger.log("Stopping Telegram bot...");
         try {
           //await
-            this.bot.stop().catch(e => {
+            this.bot.stop()
+            /*
+0|prod  | failed to stop telegram TypeError: Cannot read properties of undefined (reading 'catch')
+0|prod  |     at TelegramClient.stop (file:///root/prod/packages/client-telegram/dist/index.js:1281:28)
+            .catch(e => {
               console.error('failed to stop telegram', e)
             });
+            */
         } catch(e) {
           console.error('failed to stop telegram', e)
         }
