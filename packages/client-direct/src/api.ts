@@ -180,12 +180,13 @@ export function createApiRouter(
         }
 
         // load character from body
-        const character = req.body;
-        console.log("character in", character);
+        let character = req.body;
+        console.log("update character in", character);
         try {
             directClient.patchupCharacter(character)
             validateCharacterConfig(character);
         } catch (e) {
+            console.error(e)
             elizaLogger.error(`Error parsing character: ${e}`);
             res.status(400).json({
                 success: false,
@@ -194,14 +195,15 @@ export function createApiRouter(
             return;
         }
 
-        console.log("character out settings?.secrets", character.settings?.secrets);
-        console.log("character out clientConfig", character.clientConfig);
+        console.log("update character out settings?.secrets", character.settings?.secrets);
+        console.log("update character out clientConfig", character.clientConfig);
 
         // start it up (and register it)
         try {
             agent = await directClient.startAgent(character);
             elizaLogger.log(`${character.name} started`);
         } catch (e) {
+            console.error(e)
             elizaLogger.error(`Error starting agent: ${e}`);
             res.status(500).json({
                 success: false,
@@ -248,8 +250,8 @@ export function createApiRouter(
 
     router.post("/agents/set", async (req, res) => {
         // load character from body
-        const character = req.body;
-        console.log("character", character);
+        let character = req.body;
+        console.log("new character", character);
         try {
             directClient.patchupCharacter(character)
             validateCharacterConfig(character);
@@ -467,15 +469,20 @@ export function createApiRouter(
 
     router.post("/agent/start", async (req, res) => {
         const { characterPath, characterJson } = req.body;
-        console.log("characterPath:", characterPath);
-        console.log("characterJson:", characterJson);
+        console.log("start characterPath:", characterPath);
+        console.log("start characterJson:", characterJson);
         try {
             let character: Character;
             if (characterJson) {
+                directClient.patchupCharacter(character)
+                validateCharacterConfig(character);
+                // this doesn't work with startAgent
+                /*
                 character = await directClient.jsonToCharacter(
                     characterPath,
                     characterJson
                 );
+                */
             } else if (characterPath) {
                 character =
                     await directClient.loadCharacterTryPath(characterPath);
