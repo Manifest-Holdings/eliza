@@ -249,7 +249,9 @@ export class MessageManager {
                                 this.bot.telegram.sendMessage(
                                     this.autoPostConfig.mainChannelId,
                                     chunk
-                                )
+                                ).catch(e => {
+                                  console.error('tg::_checkChannelActivity', e)
+                                })
                         )
                     );
 
@@ -375,9 +377,12 @@ export class MessageManager {
             if (!responseContent?.text) return;
 
             // Send message using telegram bot
+            console.log('_monitorPinnedMessages')
             const messages = await Promise.all(
                 this.splitMessage(responseContent.text.trim()).map((chunk) =>
-                    this.bot.telegram.sendMessage(mainChannel, chunk)
+                    this.bot.telegram.sendMessage(mainChannel, chunk).catch(e => {
+                      console.error('tg::_monitorPinnedMessages', e)
+                    })
                 )
             );
 
@@ -926,6 +931,7 @@ export class MessageManager {
 
             for (let i = 0; i < chunks.length; i++) {
                 const chunk = escapeMarkdown(chunks[i]);
+                console.log('tg::sendMessageInChunks')
                 const sentMessage = (await ctx.telegram.sendMessage(
                     ctx.chat.id,
                     chunk,
@@ -937,7 +943,7 @@ export class MessageManager {
                         parse_mode: "Markdown",
                     }
                 ).catch(e => {
-                  console.error('tg::sendMessage', e)
+                  console.error('tg::sendMessageInChunks', e)
                 })) as Message.TextMessage
 
                 sentMessages.push(sentMessage);
@@ -1059,7 +1065,9 @@ export class MessageManager {
 
     // Main handler for incoming messages
     public async handleMessage(ctx: Context): Promise<void> {
+        //console.log('handleMessage')
         if (!ctx.message || !ctx.from) {
+            console.log('handleMessage - no message or sender info')
             return; // Exit if no message or sender info
         }
 
@@ -1073,6 +1081,7 @@ export class MessageManager {
         ) {
             // We know this is a message update context now
             await this._monitorPinnedMessages(ctx);
+            console.log('handleMessage - We know this is a message update context now')
             return;
         }
 
@@ -1081,6 +1090,7 @@ export class MessageManager {
                 ?.shouldIgnoreBotMessages &&
             ctx.from.is_bot
         ) {
+            console.log('handleMessage - is_bot')
             return;
         }
         if (
@@ -1088,6 +1098,7 @@ export class MessageManager {
                 ?.shouldIgnoreDirectMessages &&
             ctx.chat?.type === "private"
         ) {
+            console.log('handleMessage - is_private')
             return;
         }
 
@@ -1106,6 +1117,7 @@ export class MessageManager {
             !this.runtime.character.clientConfig?.telegram
                 ?.shouldRespondOnlyToMentions
         ) {
+            console.log('tg/mm:handleMessage - isTeam')
             const isDirectlyMentioned = this._isMessageForMe(message);
             const hasInterest = this._checkInterest(chatId);
 
@@ -1282,6 +1294,7 @@ export class MessageManager {
                 : messageText;
 
             if (!fullText) {
+                console.log('tg/mm:handleMessage - no full text')
                 return; // Skip if no content
             }
 
@@ -1419,6 +1432,8 @@ export class MessageManager {
                     state,
                     callback
                 );
+            } else {
+              //console.log('tg/mm:handleMessage - shouldnt respond')
             }
 
             await this.runtime.evaluate(memory, state, shouldRespond, callback);
