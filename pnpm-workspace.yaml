@@ -30,5 +30,6 @@ packages:
     - "packages/plugin-tee-verifiable-log"
     - "packages/plugin-email"
     - "packages/plugin-email-automation"
+    - "packages/manifest-rag"
     - "client"
     - "agent"
