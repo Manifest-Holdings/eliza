@@ -501,6 +501,7 @@ export async function loadCharacters(
                 const character: Character = await loadCharacterTryPath(
                     characterPath
                 );
+                character.plugins = await handlePluginImporting(character.plugins);
                 loadedCharacters.push(character);
             } catch (e) {
                 process.exit(1);
@@ -1073,6 +1074,7 @@ const startAgents = async () => {
     let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
     const charactersArg = args.characters || args.character;
+    defaultCharacter.plugins = await handlePluginImporting(defaultCharacter.plugins);
     let characters = [defaultCharacter];
 
     /*
