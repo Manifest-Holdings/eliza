@@ -194,6 +194,7 @@ export function createApiRouter(
             });
             return;
         }
+        const originalPlugins = character.plugins
 
         console.log("update character out settings?.secrets", character.settings?.secrets);
         console.log("update character out clientConfig", character.clientConfig);
@@ -242,18 +243,22 @@ export function createApiRouter(
             }
         }
 
+        const safeCharacter = {...character, plugins: originalPlugins }
+
         res.json({
             id: character.id,
-            character: character,
+            character: safeCharacter,
         });
     });
 
     router.post("/agents/set", async (req, res) => {
         // load character from body
         let character = req.body;
+        let safeCharacter = req.body;
         console.log("new character", character);
         try {
             directClient.patchupCharacter(character)
+            safeCharacter = {...character}
             validateCharacterConfig(character);
         } catch (e) {
             elizaLogger.error(`Error parsing character: ${e}`);
@@ -270,7 +275,7 @@ export function createApiRouter(
 
         res.json({
             id: character.id,
-            character: character,
+            character: safeCharacter,
         });
     });
 
